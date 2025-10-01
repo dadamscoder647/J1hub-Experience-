@@ -29,6 +29,39 @@
       letter-spacing: 0.02em;
     }
 
+    .search-container {
+      margin: 1.5rem auto 0;
+      max-width: 340px;
+      position: relative;
+    }
+
+    .search-container input[type='search'] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 1rem;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
+      outline: none;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .search-container input[type='search']:focus {
+      box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.45),
+        0 12px 20px rgba(15, 23, 42, 0.18);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
     main {
       max-width: 960px;
       margin: 0 auto;
@@ -90,6 +123,10 @@
         font-size: 1.6rem;
       }
 
+      .search-container {
+        margin-top: 1.2rem;
+      }
+
       main {
         padding: 1rem;
         gap: 1rem;
@@ -104,49 +141,89 @@
 <body>
   <header>
     <h1>🏨 Wisconsin Dells Hotel Hub</h1>
+    <div class="search-container">
+      <label for="hotel-search" class="visually-hidden">Search hotels</label>
+      <input
+        type="search"
+        id="hotel-search"
+        name="hotel-search"
+        placeholder="Search hotels…"
+        autocomplete="off"
+      />
+    </div>
   </header>
   <main id="hotel-list" aria-live="polite">
     <!-- Hotel cards will be injected here -->
   </main>
   <script>
+    const state = {
+      hotels: [],
+    };
+
+    function renderHotels(hotels) {
+      const container = document.getElementById('hotel-list');
+      container.innerHTML = '';
+
+      if (!hotels.length) {
+        container.innerHTML =
+          '<p style="color: #4f46e5; font-weight: 600;">No hotels match your search.</p>';
+        return;
+      }
+
+      hotels.forEach((hotel) => {
+        const card = document.createElement('article');
+        card.className = 'hotel-card';
+
+        const name = document.createElement('h2');
+        name.textContent = hotel.name;
+        card.appendChild(name);
+
+        const address = document.createElement('p');
+        address.className = 'hotel-meta';
+        address.innerHTML = `<strong>Address:</strong> ${hotel.address}`;
+        card.appendChild(address);
+
+        const phone = document.createElement('p');
+        phone.className = 'hotel-meta';
+        phone.innerHTML = `<strong>Phone:</strong> ${hotel.phone}`;
+        card.appendChild(phone);
+
+        const link = document.createElement('a');
+        link.className = 'hotel-link';
+        link.href = hotel.website;
+        link.textContent = 'Visit Website';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        card.appendChild(link);
+
+        container.appendChild(card);
+      });
+    }
+
+    function filterHotels(query) {
+      const normalizedQuery = query.trim().toLowerCase();
+      if (!normalizedQuery) {
+        renderHotels(state.hotels);
+        return;
+      }
+
+      const filtered = state.hotels.filter((hotel) => {
+        const name = hotel.name.toLowerCase();
+        const address = hotel.address.toLowerCase();
+        return name.includes(normalizedQuery) || address.includes(normalizedQuery);
+      });
+
+      renderHotels(filtered);
+    }
+
     async function loadHotels() {
       try {
         const response = await fetch('hotels.json');
         if (!response.ok) {
           throw new Error(`Failed to load hotel data: ${response.status}`);
         }
-        const hotels = await response.json();
-        const container = document.getElementById('hotel-list');
-        container.innerHTML = '';
-
-        hotels.forEach((hotel) => {
-          const card = document.createElement('article');
-          card.className = 'hotel-card';
-
-          const name = document.createElement('h2');
-          name.textContent = hotel.name;
-          card.appendChild(name);
-
-          const address = document.createElement('p');
-          address.className = 'hotel-meta';
-          address.innerHTML = `<strong>Address:</strong> ${hotel.address}`;
-          card.appendChild(address);
-
-          const phone = document.createElement('p');
-          phone.className = 'hotel-meta';
-          phone.innerHTML = `<strong>Phone:</strong> ${hotel.phone}`;
-          card.appendChild(phone);
-
-          const link = document.createElement('a');
-          link.className = 'hotel-link';
-          link.href = hotel.website;
-          link.textContent = 'Visit Website';
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-          card.appendChild(link);
-
-          container.appendChild(card);
-        });
+        state.hotels = await response.json();
+        renderHotels(state.hotels);
       } catch (error) {
         const container = document.getElementById('hotel-list');
         container.innerHTML = `<p style="color: #dc2626; font-weight: 600;">${error.message}</p>`;
@@ -154,6 +231,11 @@
     }
 
     loadHotels();
+
+    const searchInput = document.getElementById('hotel-search');
+    searchInput.addEventListener('input', (event) => {
+      filterHotels(event.target.value);
+    });
   </script>
 </body>
 </html>
