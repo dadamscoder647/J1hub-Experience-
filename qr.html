@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Generator | J1hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+        sans-serif;
+      background: linear-gradient(160deg, #eef2ff, #ede9fe);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      color: #1e1b4b;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 24px 40px rgba(79, 70, 229, 0.18);
+      width: min(420px, 100%);
+      padding: 2.5rem 2rem;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.8rem;
+      letter-spacing: -0.015em;
+    }
+
+    p.description {
+      margin: 0.5rem 0 1.8rem;
+      color: #4c1d95;
+      line-height: 1.5;
+    }
+
+    form {
+      display: grid;
+      gap: 1rem;
+    }
+
+    label {
+      text-align: left;
+      font-weight: 600;
+      color: #312e81;
+      font-size: 0.95rem;
+    }
+
+    input[type='url'] {
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(79, 70, 229, 0.25);
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input[type='url']:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+    }
+
+    button {
+      padding: 0.85rem 1rem;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover,
+    button:focus {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(79, 70, 229, 0.24);
+    }
+
+    button.secondary {
+      background: #1f2937;
+      margin-top: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .qr-wrapper {
+      margin-top: 2rem;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(79, 70, 229, 0.05);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .qr-wrapper.empty {
+      color: #7c3aed;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: radial-gradient(circle at top, #312e81, #111827 55%);
+        color: #e0e7ff;
+      }
+
+      .card {
+        background: rgba(17, 24, 39, 0.85);
+        color: #ede9fe;
+        box-shadow: 0 24px 40px rgba(17, 24, 39, 0.4);
+      }
+
+      input[type='url'] {
+        border-color: rgba(129, 140, 248, 0.4);
+        background: rgba(30, 41, 59, 0.9);
+        color: inherit;
+      }
+
+      button.secondary {
+        background: rgba(229, 231, 235, 0.12);
+        color: #fff;
+      }
+
+      .qr-wrapper {
+        background: rgba(79, 70, 229, 0.15);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Create a QR Code</h1>
+    <p class="description">Paste any link below and instantly generate a QR code you can share or download.</p>
+    <form id="qr-form">
+      <label for="qr-url">URL</label>
+      <input
+        type="url"
+        id="qr-url"
+        name="qr-url"
+        placeholder="https://example.com"
+        required
+        pattern="https?://.+"
+      />
+      <button type="submit">Generate QR</button>
+    </form>
+    <div id="qr-wrapper" class="qr-wrapper empty" role="status" aria-live="polite">
+      Enter a URL and click "Generate QR" to see your code here.
+    </div>
+    <button id="download-btn" class="secondary" type="button" disabled>
+      <span aria-hidden="true">⬇️</span>
+      <span>Download QR</span>
+    </button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    const qrWrapper = document.getElementById('qr-wrapper');
+    const form = document.getElementById('qr-form');
+    const urlInput = document.getElementById('qr-url');
+    const downloadButton = document.getElementById('download-btn');
+    let qrCodeInstance = null;
+
+    function resetQrWrapper() {
+      qrWrapper.innerHTML = '';
+      qrWrapper.classList.remove('empty');
+    }
+
+    function createQrCode(url) {
+      resetQrWrapper();
+      qrCodeInstance = new QRCode(qrWrapper, {
+        text: url,
+        width: 220,
+        height: 220,
+        colorDark: '#1f2937',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H,
+      });
+    }
+
+    function enableDownload() {
+      const canvas = qrWrapper.querySelector('canvas');
+      const image = qrWrapper.querySelector('img');
+      if (!canvas && !image) {
+        downloadButton.disabled = true;
+        return;
+      }
+
+      downloadButton.disabled = false;
+      downloadButton.onclick = () => {
+        let dataUrl = '';
+        if (canvas) {
+          dataUrl = canvas.toDataURL('image/png');
+        } else if (image) {
+          // Some browsers render the QR as an image element
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = image.width;
+          tempCanvas.height = image.height;
+          const ctx = tempCanvas.getContext('2d');
+          ctx.drawImage(image, 0, 0);
+          dataUrl = tempCanvas.toDataURL('image/png');
+        }
+
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = 'j1hub-qr.png';
+        link.click();
+      };
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const url = urlInput.value.trim();
+
+      if (!url) {
+        qrWrapper.textContent = 'Please enter a valid URL to generate a QR code.';
+        qrWrapper.classList.add('empty');
+        downloadButton.disabled = true;
+        return;
+      }
+
+      qrWrapper.innerHTML = '';
+      qrWrapper.classList.remove('empty');
+
+      if (qrCodeInstance) {
+        qrCodeInstance.clear();
+      }
+
+      createQrCode(url);
+
+      // Allow QRCode.js time to render before enabling download
+      setTimeout(enableDownload, 50);
+    });
+  </script>
+</body>
+</html>
