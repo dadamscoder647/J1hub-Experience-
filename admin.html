@@ -22,14 +22,50 @@
       padding: 2rem;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      text-align: center;
+      width: 100%;
+      max-width: 480px;
     }
 
     h1 {
       margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      font-weight: 600;
+      text-align: left;
+      gap: 0.5rem;
+    }
+
+    input {
+      padding: 0.65rem;
+      border: 1px solid #cccccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
     }
 
     button {
+      flex: 1 1 200px;
       padding: 0.75rem 1.5rem;
       font-size: 1rem;
       color: #ffffff;
@@ -37,17 +73,46 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
     }
 
     button:hover {
       background-color: #0056b3;
+    }
+
+    .message {
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="admin-container" id="admin-container">
     <h1>Admin Panel</h1>
-    <button type="button">Add New Hotel</button>
+    <form id="hotel-form" novalidate>
+      <label>
+        Hotel Name
+        <input type="text" id="hotel-name" name="hotel-name" required />
+      </label>
+      <label>
+        Address
+        <input type="text" id="hotel-address" name="hotel-address" required />
+      </label>
+      <label>
+        Phone
+        <input type="tel" id="hotel-phone" name="hotel-phone" required />
+      </label>
+      <label>
+        Website
+        <input type="url" id="hotel-website" name="hotel-website" required />
+      </label>
+      <div class="actions">
+        <button type="submit">Save Hotel</button>
+        <button type="button" id="preview-button">View Preview</button>
+      </div>
+      <p class="message" id="form-message" role="status" aria-live="polite"></p>
+    </form>
   </div>
 
   <script>
@@ -60,9 +125,76 @@
 
       if (password === "J1secure2025") {
         const container = document.getElementById("admin-container");
-        if (container) {
-          container.style.display = "block";
+        if (!container) {
+          return;
         }
+
+        container.style.display = "block";
+
+        const form = document.getElementById("hotel-form");
+        const messageEl = document.getElementById("form-message");
+        const previewButton = document.getElementById("preview-button");
+
+        const getFormData = () => {
+          const name = document.getElementById("hotel-name").value.trim();
+          const address = document.getElementById("hotel-address").value.trim();
+          const phone = document.getElementById("hotel-phone").value.trim();
+          const website = document.getElementById("hotel-website").value.trim();
+
+          return { name, address, phone, website };
+        };
+
+        const showMessage = (text, type = "success") => {
+          if (!messageEl) return;
+          messageEl.textContent = text;
+          messageEl.style.color = type === "error" ? "#c0392b" : "#27ae60";
+        };
+
+        const resetMessage = () => {
+          if (messageEl) {
+            messageEl.textContent = "";
+          }
+        };
+
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          resetMessage();
+
+          const { name, address, phone, website } = getFormData();
+
+          if (!name || !address || !phone || !website) {
+            showMessage("Please fill in all required fields.", "error");
+            return;
+          }
+
+          try {
+            const stored = window.localStorage.getItem("hotels");
+            const hotels = stored ? JSON.parse(stored) : [];
+
+            const newHotel = {
+              name,
+              address,
+              phone,
+              website,
+              createdAt: new Date().toISOString(),
+            };
+
+            hotels.push(newHotel);
+            window.localStorage.setItem("hotels", JSON.stringify(hotels));
+
+            showMessage("Hotel saved to local preview list.");
+            form.reset();
+          } catch (error) {
+            console.error("Failed to save hotel:", error);
+            showMessage("Unable to save hotel details. Please try again.", "error");
+          }
+        });
+
+        previewButton.addEventListener("click", () => {
+          const previewData = getFormData();
+          console.log("Preview hotel data:", previewData);
+          showMessage("Preview data logged to console.");
+        });
       } else {
         window.location.href = "index.html";
       }
