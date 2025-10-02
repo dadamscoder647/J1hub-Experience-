@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Dells Welcome Center",
+    "category": "Orientation, Support",
+    "description": "Daily orientation for new J1 workers, SIM cards, and local transit passes.",
+    "address": "301 Broadway Ave, Wisconsin Dells, WI",
+    "phone": "(608) 555-7301",
+    "hours": "Mon-Sat 9am-6pm",
+    "website": "https://example.com/welcome"
+  },
+  {
+    "name": "Community Health Clinic",
+    "category": "Healthcare",
+    "description": "Walk-in clinic with multilingual staff and discounted visits for J1 students.",
+    "address": "920 Elm St, Lake Delton, WI",
+    "phone": "(608) 555-2200",
+    "hours": "Daily 8am-8pm",
+    "website": "https://example.com/clinic"
+  },
+  {
+    "name": "Wisconsin Dells Transit",
+    "category": "Transportation",
+    "description": "Bus routes connecting major resorts, housing, and grocery stores.",
+    "address": "Transit Plaza, 120 Vine St, Wisconsin Dells, WI",
+    "phone": "(608) 555-6400",
+    "hours": "See site for schedule",
+    "website": "https://example.com/transit"
+  },
+  {
+    "name": "River City Market",
+    "category": "Groceries, Essentials",
+    "description": "International grocery store with extended summer hours and money transfer services.",
+    "address": "45 River Rd, Wisconsin Dells, WI",
+    "phone": "(608) 555-8899",
+    "hours": "Mon-Sun 7am-11pm",
+    "website": "https://example.com/rivercity"
+  }
+]

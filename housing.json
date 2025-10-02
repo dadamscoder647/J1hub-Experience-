@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Riverwalk Apartments",
+    "address": "455 Riverwalk Dr, Wisconsin Dells, WI",
+    "contact": "Maria Lopez",
+    "phone": "(608) 555-4821",
+    "priceRange": "$150-$180 per week",
+    "website": "https://example.com/riverwalk",
+    "notes": "Shared 2-bedroom units with utilities included. Shuttle to major resorts."
+  },
+  {
+    "name": "Oakridge Dorms",
+    "address": "88 Oakridge Ln, Lake Delton, WI",
+    "contact": "Oakridge Housing Office",
+    "phone": "(608) 555-7710",
+    "priceRange": "$120 per week",
+    "website": "https://example.com/oakridge",
+    "notes": "On-site laundry, 24/7 security, bike storage available."
+  },
+  {
+    "name": "Downtown Shared Homes",
+    "address": "Multiple homes near Broadway Ave, Wisconsin Dells",
+    "contact": "John & Rosa Realty",
+    "phone": "(608) 555-9091",
+    "priceRange": "$140-$200 per week",
+    "website": "https://example.com/downtownhomes",
+    "notes": "Single and shared rooms. Close to bus line and grocery stores."
+  }
+]
