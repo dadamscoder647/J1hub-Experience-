@@ -77,11 +77,18 @@
       padding: 1.5rem;
       box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      gap: 1.5rem;
     }
 
     .hotel-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
+    }
+
+    .hotel-details {
+      flex: 1 1 auto;
     }
 
     .hotel-card h2 {
@@ -114,6 +121,19 @@
       background: #4338ca;
     }
 
+    .hotel-qr {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+    }
+
+    .hotel-qr img {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+    }
+
     @media (max-width: 600px) {
       header {
         padding: 1.8rem 1rem 1rem;
@@ -134,6 +154,13 @@
 
       .hotel-card {
         padding: 1.2rem;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hotel-qr {
+        width: 100%;
+        justify-content: flex-start;
       }
     }
   </style>
@@ -174,19 +201,22 @@
         const card = document.createElement('article');
         card.className = 'hotel-card';
 
+        const details = document.createElement('div');
+        details.className = 'hotel-details';
+
         const name = document.createElement('h2');
         name.textContent = hotel.name;
-        card.appendChild(name);
+        details.appendChild(name);
 
         const address = document.createElement('p');
         address.className = 'hotel-meta';
         address.innerHTML = `<strong>Address:</strong> ${hotel.address}`;
-        card.appendChild(address);
+        details.appendChild(address);
 
         const phone = document.createElement('p');
         phone.className = 'hotel-meta';
         phone.innerHTML = `<strong>Phone:</strong> ${hotel.phone}`;
-        card.appendChild(phone);
+        details.appendChild(phone);
 
         const link = document.createElement('a');
         link.className = 'hotel-link';
@@ -194,7 +224,21 @@
         link.textContent = 'Visit Website';
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        card.appendChild(link);
+        details.appendChild(link);
+
+        const qrWrapper = document.createElement('div');
+        qrWrapper.className = 'hotel-qr';
+
+        const qrImage = document.createElement('img');
+        const encodedWebsite = encodeURIComponent(hotel.website);
+        qrImage.src = `https://chart.googleapis.com/chart?cht=qr&chs=100x100&chl=${encodedWebsite}`;
+        qrImage.alt = `QR code for ${hotel.name} website`;
+        qrImage.width = 100;
+        qrImage.height = 100;
+        qrWrapper.appendChild(qrImage);
+
+        card.appendChild(details);
+        card.appendChild(qrWrapper);
 
         container.appendChild(card);
       });
