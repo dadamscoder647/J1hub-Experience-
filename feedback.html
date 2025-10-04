@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Feedback</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+
+    main {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+      font-size: 1rem;
+      padding: 0.75rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    button {
+      background-color: #0069d9;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover,
+    button:focus {
+      background-color: #0053ad;
+    }
+
+    .confirmation {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 4px;
+      background-color: #e6ffed;
+      color: #1a7f37;
+      display: none;
+    }
+
+    .error {
+      color: #b00020;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Share Your Feedback</h1>
+    <p>Submit corrections or updates for the hotels listed on this site. We will review and publish changes regularly.</p>
+
+    <form id="feedback-form" novalidate>
+      <div>
+        <label for="name">Name (optional)</label>
+        <input type="text" id="name" name="name" placeholder="Your name" autocomplete="name" />
+      </div>
+
+      <div>
+        <label for="hotel">Hotel name</label>
+        <select id="hotel" name="hotel" required>
+          <option value="" disabled selected>Select a hotel</option>
+        </select>
+        <p class="error" id="hotel-error" role="alert" hidden>Please select a hotel.</p>
+      </div>
+
+      <div>
+        <label for="message">Message</label>
+        <textarea id="message" name="message" placeholder="Describe the correction or feedback" required></textarea>
+        <p class="error" id="message-error" role="alert" hidden>Please enter your feedback.</p>
+      </div>
+
+      <button type="submit">Submit Feedback</button>
+    </form>
+
+    <div class="confirmation" id="confirmation" role="status">Thank you for your feedback!</div>
+  </main>
+
+  <script>
+    const form = document.getElementById('feedback-form');
+    const hotelSelect = document.getElementById('hotel');
+    const confirmation = document.getElementById('confirmation');
+    const hotelError = document.getElementById('hotel-error');
+    const messageError = document.getElementById('message-error');
+
+    async function populateHotels() {
+      try {
+        const response = await fetch('hotels.json');
+        if (!response.ok) {
+          throw new Error('Unable to load hotels');
+        }
+        const hotels = await response.json();
+        hotels
+          .filter((hotel) => hotel.name)
+          .forEach((hotel) => {
+            const option = document.createElement('option');
+            option.value = hotel.name;
+            option.textContent = hotel.name;
+            hotelSelect.appendChild(option);
+          });
+      } catch (error) {
+        console.error('Failed to populate hotels:', error);
+      }
+    }
+
+    function saveFeedback(feedbackEntry) {
+      const feedbackKey = 'hotelFeedbackEntries';
+      const existingEntries = JSON.parse(localStorage.getItem(feedbackKey) || '[]');
+      existingEntries.push({
+        ...feedbackEntry,
+        createdAt: new Date().toISOString(),
+      });
+      localStorage.setItem(feedbackKey, JSON.stringify(existingEntries));
+    }
+
+    function showConfirmation() {
+      confirmation.style.display = 'block';
+      confirmation.focus?.();
+      setTimeout(() => {
+        confirmation.style.display = 'none';
+      }, 4000);
+    }
+
+    function resetErrors() {
+      hotelError.hidden = true;
+      messageError.hidden = true;
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      resetErrors();
+
+      const name = form.name.value.trim();
+      const hotel = form.hotel.value.trim();
+      const message = form.message.value.trim();
+
+      let hasError = false;
+
+      if (!hotel) {
+        hotelError.hidden = false;
+        hasError = true;
+      }
+
+      if (!message) {
+        messageError.hidden = false;
+        hasError = true;
+      }
+
+      if (hasError) {
+        return;
+      }
+
+      saveFeedback({ name, hotel, message });
+      form.reset();
+      showConfirmation();
+    });
+
+    populateHotels();
+  </script>
+</body>
+</html>
