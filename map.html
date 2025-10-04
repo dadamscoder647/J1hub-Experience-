@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Map | J1hub Experience</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+e2atLYOGPZ8p0GSBM94HC38qULj8sMkGGmYwH0kM="
+    crossorigin=""
+  />
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      color: #1f2933;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      color: #fff;
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 18px 36px rgba(79, 70, 229, 0.2);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    header p {
+      margin: 0.5rem auto 0;
+      max-width: 640px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      padding: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .toolbar {
+      background: #fff;
+      border-radius: 18px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .toolbar form {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    label {
+      font-weight: 600;
+      color: #312e81;
+    }
+
+    input[type="search"] {
+      flex: 1 1 240px;
+      padding: 0.6rem 0.75rem;
+      border-radius: 12px;
+      border: 1px solid #c7d2fe;
+      font-size: 1rem;
+      min-height: 44px;
+    }
+
+    input[type="search"]:focus {
+      outline: 3px solid rgba(79, 70, 229, 0.35);
+      border-color: #4f46e5;
+    }
+
+    button[type="submit"] {
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 0.65rem 1.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px;
+    }
+
+    button[type="submit"]:hover,
+    button[type="submit"]:focus {
+      background: #4338ca;
+    }
+
+    .status {
+      font-size: 0.95rem;
+      color: #4338ca;
+    }
+
+    #map {
+      flex: 1;
+      min-height: 520px;
+      background: #e5e7eb;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
+    }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+    }
+
+    .leaflet-popup-content h3 {
+      margin: 0 0 0.35rem;
+      font-size: 1.1rem;
+      color: #312e81;
+    }
+
+    .leaflet-popup-content p {
+      margin: 0 0 0.75rem;
+      font-size: 0.95rem;
+      color: #1f2933;
+    }
+
+    .leaflet-popup-content a {
+      color: #4f46e5;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .inline-link {
+      color: #4f46e5;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .inline-link:hover,
+    .inline-link:focus {
+      text-decoration: underline;
+    }
+
+    .leaflet-popup-content a:hover,
+    .leaflet-popup-content a:focus {
+      text-decoration: underline;
+    }
+
+    footer {
+      padding: 1rem 1.5rem 2rem;
+      text-align: center;
+      color: #4b5563;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      main {
+        padding: 1.25rem;
+      }
+
+      header {
+        padding: 1.5rem 1rem;
+      }
+
+      #map {
+        min-height: 460px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Explore Hotels on the Map</h1>
+    <p>Discover where each hotel is located, open detailed pages, and search quickly by name.</p>
+  </header>
+  <main>
+    <section class="toolbar" aria-labelledby="search-title">
+      <form id="search-form" role="search">
+        <label id="search-title" for="hotel-search">Find a hotel</label>
+        <input
+          type="search"
+          id="hotel-search"
+          name="hotel-search"
+          placeholder="Start typing a hotel name"
+          list="hotel-options"
+          autocomplete="off"
+          aria-describedby="search-hint"
+        />
+        <datalist id="hotel-options"></datalist>
+        <button type="submit">Search</button>
+        <p id="search-hint" class="visually-hidden">Type the full or partial hotel name and submit to focus the map.</p>
+      </form>
+      <p class="status" id="status" role="status" aria-live="polite">Loading hotels and map data…</p>
+    </section>
+    <div id="map" role="application" aria-label="Hotel locations on map"></div>
+  </main>
+  <footer>
+    <a href="index.html" class="inline-link">&larr; Back to hotel listings</a>
+  </footer>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j7kPtv7wTn5Mmu+0gIVtxN3kEQw33xZf2G7b+6A="
+    crossorigin=""
+  ></script>
+  <script>
+    (function () {
+      const hotelsUrl = 'hotels.json';
+      const defaultLocation = [43.627, -89.7707];
+      const map = L.map('map', {
+        scrollWheelZoom: true,
+        zoomControl: true,
+      }).setView(defaultLocation, 12);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      const statusEl = document.getElementById('status');
+      const searchForm = document.getElementById('search-form');
+      const searchInput = document.getElementById('hotel-search');
+      const datalist = document.getElementById('hotel-options');
+
+      const geocodeCacheKey = 'hotelGeocodeCache';
+      const geocodeCacheTTL = 1000 * 60 * 60 * 24; // 24 hours
+      let geocodeCache = {};
+      let lastCacheSave = 0;
+
+      const loadCache = () => {
+        try {
+          const raw = localStorage.getItem(geocodeCacheKey);
+          if (!raw) {
+            return {};
+          }
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== 'object') {
+            return {};
+          }
+          const now = Date.now();
+          return Object.fromEntries(
+            Object.entries(parsed).filter(([, value]) => value && now - value.timestamp < geocodeCacheTTL)
+          );
+        } catch (error) {
+          console.warn('Unable to read geocode cache', error);
+          return {};
+        }
+      };
+
+      const saveCache = () => {
+        const now = Date.now();
+        if (now - lastCacheSave < 2000) {
+          return;
+        }
+        try {
+          const payload = {};
+          for (const [key, value] of Object.entries(geocodeCache)) {
+            payload[key] = { ...value, timestamp: value.timestamp || now };
+          }
+          localStorage.setItem(geocodeCacheKey, JSON.stringify(payload));
+          lastCacheSave = now;
+        } catch (error) {
+          console.warn('Unable to persist geocode cache', error);
+        }
+      };
+
+      geocodeCache = loadCache();
+
+      const slugify = (value = '') =>
+        value
+          .toString()
+          .normalize('NFKD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .replace(/-{2,}/g, '-');
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      const fetchCoordinates = async (hotel, index) => {
+        const slug = slugify(hotel.slug || hotel.name || `hotel-${index}`);
+        const cached = geocodeCache[slug];
+        if (cached && cached.lat && cached.lon) {
+          return { slug, ...cached };
+        }
+
+        // Respect Nominatim usage policy with a polite delay between uncached requests
+        if (index > 0) {
+          await sleep(1100);
+        }
+
+        const query = `${hotel.address || ''}, Wisconsin Dells, WI`;
+        const url = new URL('https://nominatim.openstreetmap.org/search');
+        url.searchParams.set('q', query);
+        url.searchParams.set('format', 'json');
+        url.searchParams.set('limit', '1');
+        url.searchParams.set('addressdetails', '0');
+
+        const response = await fetch(url.toString(), {
+          headers: {
+            'Accept-Language': 'en',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Geocoding failed with status ${response.status}`);
+        }
+
+        const results = await response.json();
+        if (!Array.isArray(results) || results.length === 0) {
+          throw new Error('No coordinates found');
+        }
+
+        const { lat, lon, display_name: displayName } = results[0];
+        const payload = {
+          slug,
+          lat: Number.parseFloat(lat),
+          lon: Number.parseFloat(lon),
+          displayName: displayName || query,
+          timestamp: Date.now(),
+        };
+        geocodeCache[slug] = payload;
+        saveCache();
+        return payload;
+      };
+
+      const renderPopup = (hotel, slug) => {
+        const encodedSlug = encodeURIComponent(slug);
+        const linkHref = `hotel.html?id=${encodedSlug}`;
+        const safeName = hotel.name || 'Hotel';
+        const safeAddress = hotel.address ? hotel.address : 'Address unavailable';
+
+        return `
+          <div class="popup">
+            <h3>${safeName}</h3>
+            <p>${safeAddress}</p>
+            <a href="${linkHref}">Open details</a>
+          </div>
+        `;
+      };
+
+      const markers = new Map();
+
+      const focusHotel = (slug) => {
+        const marker = markers.get(slug);
+        if (!marker) {
+          statusEl.textContent = 'Unable to locate that hotel on the map.';
+          return;
+        }
+        marker.openPopup();
+        map.flyTo(marker.getLatLng(), 15, {
+          animate: true,
+          duration: 1.25,
+        });
+        statusEl.textContent = `Centered map on ${marker.options.title}.`;
+      };
+
+      searchForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const value = searchInput.value.trim().toLowerCase();
+        if (!value) {
+          statusEl.textContent = 'Enter a hotel name to search.';
+          return;
+        }
+
+        const entry = Array.from(markers.entries()).find(([slug, marker]) => {
+          return marker.options.title.toLowerCase() === value;
+        });
+
+        if (!entry) {
+          // Fallback to partial match
+          const partial = Array.from(markers.entries()).find(([slug, marker]) =>
+            marker.options.title.toLowerCase().includes(value)
+          );
+          if (partial) {
+            focusHotel(partial[0]);
+          } else {
+            statusEl.textContent = 'No matching hotel found.';
+          }
+          return;
+        }
+
+        focusHotel(entry[0]);
+      });
+
+      const populateSearchOptions = (hotels) => {
+        datalist.innerHTML = '';
+        hotels
+          .filter((hotel) => Boolean(hotel.name))
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .forEach((hotel) => {
+            const option = document.createElement('option');
+            option.value = hotel.name;
+            datalist.appendChild(option);
+          });
+      };
+
+      const init = async () => {
+        try {
+          const response = await fetch(hotelsUrl, { cache: 'no-cache' });
+          if (!response.ok) {
+            throw new Error(`Unable to load hotels: ${response.status}`);
+          }
+          const hotels = await response.json();
+          if (!Array.isArray(hotels)) {
+            throw new Error('Hotels data is not an array.');
+          }
+
+          populateSearchOptions(hotels);
+
+          statusEl.textContent = 'Placing hotels on the map…';
+
+          const coordinates = [];
+          for (let index = 0; index < hotels.length; index += 1) {
+            const hotel = hotels[index];
+            try {
+              const result = await fetchCoordinates(hotel, index);
+              coordinates.push({ hotel, ...result });
+            } catch (error) {
+              console.warn('Unable to geocode hotel', hotel, error);
+              statusEl.textContent = `Some hotels could not be placed on the map: ${error.message}`;
+            }
+          }
+
+          if (coordinates.length === 0) {
+            statusEl.textContent = 'No hotels could be plotted. Please try again later.';
+            return;
+          }
+
+          const latLngs = [];
+
+          coordinates.forEach(({ hotel, slug, lat, lon }) => {
+            if (typeof lat !== 'number' || Number.isNaN(lat) || typeof lon !== 'number' || Number.isNaN(lon)) {
+              return;
+            }
+            const marker = L.marker([lat, lon], {
+              title: hotel.name || slug,
+            }).addTo(map);
+            marker.bindPopup(renderPopup(hotel, slug));
+            markers.set(slug, marker);
+            latLngs.push([lat, lon]);
+          });
+
+          if (latLngs.length === 1) {
+            map.setView(latLngs[0], 14);
+          } else if (latLngs.length > 1) {
+            map.fitBounds(latLngs, { padding: [30, 30] });
+          }
+
+          statusEl.textContent = 'Map is ready. Search for a hotel or select a pin to learn more.';
+        } catch (error) {
+          console.error(error);
+          statusEl.textContent = 'Unable to load map data. Please refresh and try again.';
+        }
+      };
+
+      init();
+
+      window.addEventListener('beforeunload', saveCache);
+    })();
+  </script>
+</body>
+</html>
