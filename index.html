@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>J1hub Experience Hub</title>
+  <title data-i18n="app.title">J1hub Experience Hub</title>
   <style>
     body {
       margin: 0;
@@ -61,6 +61,39 @@
       padding: 0.45rem 1rem;
       cursor: pointer;
       transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .language-toggle {
+      margin: 0.75rem auto 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.25rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+    }
+
+    .language-toggle button {
+      background: transparent;
+      border: none;
+      border-radius: 999px;
+      color: #fff;
+      font-weight: 600;
+      padding: 0.35rem 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .language-toggle button:hover,
+    .language-toggle button:focus {
+      background: rgba(79, 70, 229, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .language-toggle button.is-active {
+      background: #4338ca;
+      color: #fff;
     }
 
     .filter-chip:hover,
@@ -290,18 +323,46 @@
 </head>
 <body>
   <header>
-    <h1>🏨 Wisconsin Dells Experience Hub</h1>
+    <h1 data-i18n="app.title">🏨 Wisconsin Dells Experience Hub</h1>
+    <div
+      class="language-toggle"
+      role="group"
+      aria-label="Select language"
+      data-i18n-aria-label="aria.languageToggle"
+    >
+      <button type="button" data-language="en" class="is-active" aria-pressed="true">
+        EN
+      </button>
+      <button type="button" data-language="es" aria-pressed="false">
+        ES
+      </button>
+      <button type="button" data-language="pt" aria-pressed="false">
+        PT
+      </button>
+    </div>
     <div class="search-container">
-      <label for="hotel-search" class="visually-hidden">Search the hub</label>
+      <label
+        for="hotel-search"
+        class="visually-hidden"
+        data-i18n="search.label"
+      >
+        Search the hub
+      </label>
       <input
         type="search"
         id="hotel-search"
         name="hotel-search"
         placeholder="Search the hub…"
+        data-i18n-placeholder="search.placeholder"
         autocomplete="off"
       />
     </div>
-    <nav class="tablist" role="tablist" aria-label="Resource categories">
+    <nav
+      class="tablist"
+      role="tablist"
+      aria-label="Resource categories"
+      data-i18n-aria-label="aria.tablist"
+    >
       <button
         type="button"
         class="filter-chip is-active"
@@ -310,6 +371,7 @@
         aria-selected="true"
         aria-controls="results"
         id="tab-hotels"
+        data-i18n="tabs.hotels"
       >
         Hotels
       </button>
@@ -321,6 +383,7 @@
         aria-selected="false"
         aria-controls="results"
         id="tab-housing"
+        data-i18n="tabs.housing"
       >
         Housing
       </button>
@@ -332,6 +395,7 @@
         aria-selected="false"
         aria-controls="results"
         id="tab-resources"
+        data-i18n="tabs.resources"
       >
         Local Resources
       </button>
@@ -346,7 +410,7 @@
       aria-labelledby="tab-hotels"
     ></section>
   </main>
-  <script>
+    <script>
     const state = {
       data: {
         hotels: [],
@@ -358,21 +422,128 @@
 
     const tabConfig = {
       hotels: {
-        label: 'Hotels',
-        empty: 'No hotels match your search.',
+        labelKey: 'tabs.hotels',
+        emptyKey: 'messages.no_hotels',
       },
       housing: {
-        label: 'Housing',
-        empty: 'No housing options match your search.',
+        labelKey: 'tabs.housing',
+        emptyKey: 'messages.no_housing',
       },
       resources: {
-        label: 'Local Resources',
-        empty: 'No local resources match your search.',
+        labelKey: 'tabs.resources',
+        emptyKey: 'messages.no_resources',
       },
     };
 
     const resultsContainer = document.getElementById('results');
     const resultsMeta = document.getElementById('results-meta');
+    const searchInput = document.getElementById('hotel-search');
+    const filterButtons = document.querySelectorAll('.filter-chip');
+    const languageButtons = document.querySelectorAll('[data-language]');
+    languageButtons.forEach((button) => {
+      button.disabled = true;
+      button.setAttribute('aria-disabled', 'true');
+    });
+
+    const i18n = {
+      translations: {},
+      currentLanguage: 'en',
+      supported: ['en', 'es', 'pt'],
+    };
+
+    function formatTemplate(template, replacements = {}) {
+      let result = template;
+      Object.entries(replacements).forEach(([token, value]) => {
+        const regex = new RegExp(`{${token}}`, 'g');
+        result = result.replace(regex, value);
+      });
+      return result;
+    }
+
+    function translate(key, replacements = {}) {
+      if (!key) {
+        return '';
+      }
+      const languages = [i18n.currentLanguage, 'en'];
+      for (const language of languages) {
+        const catalog = i18n.translations?.[language];
+        if (catalog && typeof catalog[key] === 'string') {
+          return formatTemplate(catalog[key], replacements);
+        }
+      }
+      return formatTemplate(key, replacements);
+    }
+
+    function updateLanguageToggle(activeLanguage) {
+      languageButtons.forEach((button) => {
+        const isActive = button.dataset.language === activeLanguage;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      });
+    }
+
+    function enableLanguageButtons() {
+      languageButtons.forEach((button) => {
+        button.disabled = false;
+        button.removeAttribute('aria-disabled');
+      });
+    }
+
+    function updateStaticText() {
+      const textElements = document.querySelectorAll('[data-i18n]');
+      textElements.forEach((element) => {
+        const key = element.dataset.i18n;
+        const translation = translate(key);
+        if (translation) {
+          element.textContent = translation;
+        }
+      });
+
+      const placeholderElements = document.querySelectorAll('[data-i18n-placeholder]');
+      placeholderElements.forEach((element) => {
+        const key = element.dataset.i18nPlaceholder;
+        const translation = translate(key);
+        if (translation) {
+          element.setAttribute('placeholder', translation);
+        }
+      });
+
+      const ariaLabelElements = document.querySelectorAll('[data-i18n-aria-label]');
+      ariaLabelElements.forEach((element) => {
+        const key = element.dataset.i18nAriaLabel;
+        const translation = translate(key);
+        if (translation) {
+          element.setAttribute('aria-label', translation);
+        }
+      });
+    }
+
+    function getStoredLanguage() {
+      try {
+        const stored = localStorage.getItem('preferredLanguage');
+        return i18n.supported.includes(stored) ? stored : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function persistLanguage(language) {
+      try {
+        localStorage.setItem('preferredLanguage', language);
+      } catch (error) {
+        // Ignore persistence errors (e.g., private browsing)
+      }
+    }
+
+    function setLanguage(language) {
+      const normalized = i18n.supported.includes(language) ? language : 'en';
+      i18n.currentLanguage = normalized;
+      persistLanguage(normalized);
+      document.documentElement.setAttribute('lang', normalized);
+      updateLanguageToggle(normalized);
+      updateStaticText();
+      renderActiveTab(searchInput ? searchInput.value : '');
+    }
 
     function slugify(value = '') {
       return value
@@ -428,7 +599,8 @@
 
     function renderHotels(hotels) {
       hotels.forEach((hotel) => {
-        const slug = hotel.slug || slugify(hotel.name || '');
+        const name = hotel.name || '';
+        const slug = hotel.slug || slugify(name);
         const encodedSlug = encodeURIComponent(slug);
         const detailPath = `hotel.html?id=${encodedSlug}`;
         const absoluteDetailUrl = new URL(detailPath, window.location.href).toString();
@@ -439,40 +611,35 @@
         const mainLink = document.createElement('a');
         mainLink.className = 'hotel-card-main';
         mainLink.href = detailPath;
-        mainLink.setAttribute('aria-label', `View details for ${hotel.name}`);
+        mainLink.setAttribute('aria-label', translate('aria.viewDetails', { name }));
 
         const details = document.createElement('div');
         details.className = 'hotel-details';
 
-        const name = document.createElement('h2');
-        name.textContent = hotel.name;
-        details.appendChild(name);
+        const title = document.createElement('h2');
+        title.textContent = name;
+        details.appendChild(title);
 
         if (hotel.address) {
           const address = document.createElement('p');
           address.className = 'hotel-meta';
-          address.innerHTML = `<strong>Address:</strong> ${hotel.address}`;
+          address.textContent = hotel.address;
           details.appendChild(address);
         }
 
         if (hotel.phone) {
           const phone = document.createElement('p');
           phone.className = 'hotel-meta';
-          phone.innerHTML = `<strong>Phone:</strong> ${hotel.phone}`;
+          phone.textContent = hotel.phone;
           details.appendChild(phone);
         }
 
-        if (hotel.checkIn || hotel.checkOut) {
-          const stayDetails = document.createElement('p');
-          stayDetails.className = 'hotel-meta';
-          const parts = [];
-          if (hotel.checkIn) parts.push(`Check-in: ${hotel.checkIn}`);
-          if (hotel.checkOut) parts.push(`Check-out: ${hotel.checkOut}`);
-          stayDetails.innerHTML = `<strong>Stay:</strong> ${parts.join(' • ')}`;
-          details.appendChild(stayDetails);
+        if (hotel.description) {
+          const description = document.createElement('p');
+          description.className = 'hotel-meta';
+          description.textContent = hotel.description;
+          details.appendChild(description);
         }
-
-        mainLink.appendChild(details);
 
         const qrWrapper = document.createElement('div');
         qrWrapper.className = 'hotel-qr';
@@ -481,11 +648,12 @@
         qrImage.src = `https://chart.googleapis.com/chart?cht=qr&chs=100x100&chl=${encodeForURL(
           absoluteDetailUrl
         )}`;
-        qrImage.alt = `QR code for ${hotel.name}`;
+        qrImage.alt = translate('aria.qrCode', { name });
         qrImage.width = 100;
         qrImage.height = 100;
         qrWrapper.appendChild(qrImage);
 
+        mainLink.appendChild(details);
         mainLink.appendChild(qrWrapper);
 
         card.appendChild(mainLink);
@@ -498,8 +666,8 @@
           actions.appendChild(
             createActionButton({
               href: `tel:${phoneDigits}`,
-              text: 'Call',
-              ariaLabel: `Call ${hotel.name}`,
+              text: translate('buttons.call'),
+              ariaLabel: translate('aria.call', { name }),
             })
           );
         }
@@ -511,8 +679,8 @@
           actions.appendChild(
             createActionButton({
               href: mapLink,
-              text: 'Map',
-              ariaLabel: `Open ${hotel.name} in Google Maps`,
+              text: translate('buttons.map'),
+              ariaLabel: translate('aria.map', { name }),
               target: '_blank',
               rel: 'noopener noreferrer',
             })
@@ -523,8 +691,8 @@
           actions.appendChild(
             createActionButton({
               href: hotel.website,
-              text: 'Website',
-              ariaLabel: `Open website for ${hotel.name}`,
+              text: translate('buttons.website'),
+              ariaLabel: translate('aria.website', { name }),
               target: '_blank',
               rel: 'noopener noreferrer',
             })
@@ -540,6 +708,12 @@
     }
 
     function renderHousing(listings) {
+      const addressLabel = translate('labels.address');
+      const contactLabel = translate('labels.contact');
+      const phoneLabel = translate('labels.phone');
+      const priceRangeLabel = translate('labels.priceRange');
+      const notesLabel = translate('labels.notes');
+
       listings.forEach((listing) => {
         const card = document.createElement('article');
         card.className = 'resource-card';
@@ -550,41 +724,41 @@
 
         const address = document.createElement('p');
         address.className = 'resource-meta';
-        address.innerHTML = `<strong>Address:</strong> ${listing.address}`;
+        address.innerHTML = `<strong>${addressLabel}:</strong> ${listing.address}`;
         card.appendChild(address);
 
         if (listing.contact) {
           const contact = document.createElement('p');
           contact.className = 'resource-meta';
-          contact.innerHTML = `<strong>Contact:</strong> ${listing.contact}`;
+          contact.innerHTML = `<strong>${contactLabel}:</strong> ${listing.contact}`;
           card.appendChild(contact);
         }
 
         if (listing.phone) {
           const phone = document.createElement('p');
           phone.className = 'resource-meta';
-          phone.innerHTML = `<strong>Phone:</strong> ${listing.phone}`;
+          phone.innerHTML = `<strong>${phoneLabel}:</strong> ${listing.phone}`;
           card.appendChild(phone);
         }
 
         if (listing.priceRange) {
           const price = document.createElement('p');
           price.className = 'resource-meta';
-          price.innerHTML = `<strong>Price range:</strong> ${listing.priceRange}`;
+          price.innerHTML = `<strong>${priceRangeLabel}:</strong> ${listing.priceRange}`;
           card.appendChild(price);
         }
 
         if (listing.notes) {
           const notes = document.createElement('p');
           notes.className = 'resource-meta';
-          notes.innerHTML = `<strong>Notes:</strong> ${listing.notes}`;
+          notes.innerHTML = `<strong>${notesLabel}:</strong> ${listing.notes}`;
           card.appendChild(notes);
         }
 
         if (listing.website) {
           const link = createLink({
             href: listing.website,
-            text: 'View Details',
+            text: translate('buttons.viewDetails'),
             className: 'resource-link',
           });
           card.appendChild(link);
@@ -595,6 +769,10 @@
     }
 
     function renderResources(resources) {
+      const addressLabel = translate('labels.address');
+      const phoneLabel = translate('labels.phone');
+      const hoursLabel = translate('labels.hours');
+
       resources.forEach((resource) => {
         const card = document.createElement('article');
         card.className = 'resource-card';
@@ -625,28 +803,28 @@
         if (resource.address) {
           const address = document.createElement('p');
           address.className = 'resource-meta';
-          address.innerHTML = `<strong>Address:</strong> ${resource.address}`;
+          address.innerHTML = `<strong>${addressLabel}:</strong> ${resource.address}`;
           card.appendChild(address);
         }
 
         if (resource.phone) {
           const phone = document.createElement('p');
           phone.className = 'resource-meta';
-          phone.innerHTML = `<strong>Phone:</strong> ${resource.phone}`;
+          phone.innerHTML = `<strong>${phoneLabel}:</strong> ${resource.phone}`;
           card.appendChild(phone);
         }
 
         if (resource.hours) {
           const hours = document.createElement('p');
           hours.className = 'resource-meta';
-          hours.innerHTML = `<strong>Hours:</strong> ${resource.hours}`;
+          hours.innerHTML = `<strong>${hoursLabel}:</strong> ${resource.hours}`;
           card.appendChild(hours);
         }
 
         if (resource.website) {
           const link = createLink({
             href: resource.website,
-            text: 'Visit website',
+            text: translate('buttons.visitWebsite'),
             className: 'resource-link',
           });
           card.appendChild(link);
@@ -662,8 +840,12 @@
 
     function updateMeta(count) {
       const tab = tabConfig[state.activeTab];
-      const label = tab ? tab.label : 'Listings';
-      resultsMeta.textContent = `${count} ${label} available`;
+      const labelKey = tab?.labelKey || 'labels.listings';
+      const label = translate(labelKey);
+      resultsMeta.textContent = translate('results.meta', {
+        count,
+        label,
+      });
     }
 
     function renderActiveTab(query = '') {
@@ -692,9 +874,13 @@
 
       if (!filtered.length) {
         const tab = tabConfig[state.activeTab];
-        resultsContainer.innerHTML = `<p style="color: #4f46e5; font-weight: 600;">${
-          tab?.empty || 'Nothing matches your search.'
-        }</p>`;
+        const messageKey = tab?.emptyKey || 'messages.no_results';
+        const emptyMessage = translate(messageKey);
+        const messageElement = document.createElement('p');
+        messageElement.style.color = '#4f46e5';
+        messageElement.style.fontWeight = '600';
+        messageElement.textContent = emptyMessage;
+        resultsContainer.appendChild(messageElement);
         updateMeta(0);
         return;
       }
@@ -718,6 +904,18 @@
       return response.json();
     }
 
+    async function loadTranslations() {
+      const data = await fetchJson('translations.json');
+      i18n.translations = data || {};
+      const storedLanguage = getStoredLanguage();
+      const browserLanguage = (navigator.language || '').split('-')[0].toLowerCase();
+      const initialLanguage =
+        storedLanguage ||
+        (i18n.supported.includes(browserLanguage) ? browserLanguage : 'en');
+      setLanguage(initialLanguage);
+      enableLanguageButtons();
+    }
+
     async function loadData() {
       try {
         const [hotels, housing, resources] = await Promise.all([
@@ -731,21 +929,26 @@
         }));
         state.data.housing = housing;
         state.data.resources = resources;
-        renderActiveTab();
+        renderActiveTab(searchInput ? searchInput.value : '');
       } catch (error) {
-        resultsContainer.innerHTML = `<p style="color: #dc2626; font-weight: 600;">${error.message}</p>`;
-        resultsMeta.textContent = 'Unable to load hub data.';
+        resultsContainer.innerHTML = '';
+        const messageElement = document.createElement('p');
+        messageElement.style.color = '#dc2626';
+        messageElement.style.fontWeight = '600';
+        messageElement.textContent = translate('messages.data_error', {
+          message: error.message,
+        });
+        resultsContainer.appendChild(messageElement);
+        resultsMeta.textContent = translate('messages.unable_to_load');
       }
     }
 
-    loadData();
+    if (searchInput) {
+      searchInput.addEventListener('input', (event) => {
+        renderActiveTab(event.target.value);
+      });
+    }
 
-    const searchInput = document.getElementById('hotel-search');
-    searchInput.addEventListener('input', (event) => {
-      renderActiveTab(event.target.value);
-    });
-
-    const filterButtons = document.querySelectorAll('.filter-chip');
     filterButtons.forEach((button) => {
       button.addEventListener('click', () => {
         if (button.dataset.tab === state.activeTab) {
@@ -764,9 +967,31 @@
           resultsContainer.setAttribute('aria-labelledby', activeTabId);
         }
 
-        renderActiveTab(searchInput.value);
+        renderActiveTab(searchInput ? searchInput.value : '');
       });
     });
+
+    languageButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const language = button.dataset.language;
+        if (language) {
+          setLanguage(language);
+        }
+      });
+    });
+
+    async function initialize() {
+      try {
+        await loadTranslations();
+      } catch (error) {
+        console.error('Failed to load translations:', error);
+        i18n.translations = {};
+        setLanguage('en');
+      }
+      await loadData();
+    }
+
+    initialize();
   </script>
 </body>
 </html>
