@@ -125,13 +125,28 @@
       box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       display: flex;
-      justify-content: space-between;
-      gap: 1.5rem;
+      flex-direction: column;
+      gap: 1rem;
     }
 
     .hotel-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
+    }
+
+    .hotel-card-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .hotel-card-main:focus-visible {
+      outline: 3px solid #4f46e5;
+      outline-offset: 4px;
+      border-radius: 12px;
     }
 
     .hotel-details {
@@ -186,6 +201,33 @@
       box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
     }
 
+    .hotel-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      background: #4f46e5;
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      min-height: 44px;
+      min-width: 88px;
+      transition: background 0.2s ease;
+    }
+
+    .action-button:hover,
+    .action-button:focus {
+      background: #4338ca;
+    }
+
     .tag-list {
       display: flex;
       flex-wrap: wrap;
@@ -228,11 +270,18 @@
       .hotel-card,
       .resource-card {
         padding: 1.2rem;
+      }
+
+      .hotel-card-main {
         flex-direction: column;
-        align-items: flex-start;
       }
 
       .hotel-qr {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .hotel-actions {
         width: 100%;
         justify-content: flex-start;
       }
@@ -325,20 +374,72 @@
     const resultsContainer = document.getElementById('results');
     const resultsMeta = document.getElementById('results-meta');
 
-    function createLink({ href, text }) {
+    function slugify(value = '') {
+      return value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function onlyDigits(value = '') {
+      return String(value || '').replace(/\D+/g, '');
+    }
+
+    function encodeForURL(value = '') {
+      return encodeURIComponent(String(value ?? ''));
+    }
+
+    function createLink({
+      href,
+      text,
+      className = 'hotel-link',
+      target = '_blank',
+      rel = 'noopener noreferrer',
+    }) {
       const link = document.createElement('a');
-      link.className = 'hotel-link';
+      link.className = className;
       link.href = href;
       link.textContent = text;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+      if (target) {
+        link.target = target;
+      }
+      if (rel) {
+        link.rel = rel;
+      }
       return link;
+    }
+
+    function createActionButton({ href, text, ariaLabel, target, rel }) {
+      const button = document.createElement('a');
+      button.className = 'action-button';
+      button.href = href;
+      button.textContent = text;
+      if (ariaLabel) {
+        button.setAttribute('aria-label', ariaLabel);
+      }
+      if (target) {
+        button.target = target;
+      }
+      if (rel) {
+        button.rel = rel;
+      }
+      return button;
     }
 
     function renderHotels(hotels) {
       hotels.forEach((hotel) => {
+        const slug = hotel.slug || slugify(hotel.name || '');
+        const encodedSlug = encodeURIComponent(slug);
+        const detailPath = `hotel.html?id=${encodedSlug}`;
+        const absoluteDetailUrl = new URL(detailPath, window.location.href).toString();
+
         const card = document.createElement('article');
         card.className = 'hotel-card';
+
+        const mainLink = document.createElement('a');
+        mainLink.className = 'hotel-card-main';
+        mainLink.href = detailPath;
+        mainLink.setAttribute('aria-label', `View details for ${hotel.name}`);
 
         const details = document.createElement('div');
         details.className = 'hotel-details';
@@ -347,15 +448,19 @@
         name.textContent = hotel.name;
         details.appendChild(name);
 
-        const address = document.createElement('p');
-        address.className = 'hotel-meta';
-        address.innerHTML = `<strong>Address:</strong> ${hotel.address}`;
-        details.appendChild(address);
+        if (hotel.address) {
+          const address = document.createElement('p');
+          address.className = 'hotel-meta';
+          address.innerHTML = `<strong>Address:</strong> ${hotel.address}`;
+          details.appendChild(address);
+        }
 
-        const phone = document.createElement('p');
-        phone.className = 'hotel-meta';
-        phone.innerHTML = `<strong>Phone:</strong> ${hotel.phone}`;
-        details.appendChild(phone);
+        if (hotel.phone) {
+          const phone = document.createElement('p');
+          phone.className = 'hotel-meta';
+          phone.innerHTML = `<strong>Phone:</strong> ${hotel.phone}`;
+          details.appendChild(phone);
+        }
 
         if (hotel.checkIn || hotel.checkOut) {
           const stayDetails = document.createElement('p');
@@ -367,23 +472,68 @@
           details.appendChild(stayDetails);
         }
 
-        if (hotel.website) {
-          details.appendChild(createLink({ href: hotel.website, text: 'Visit Website' }));
-        }
+        mainLink.appendChild(details);
 
         const qrWrapper = document.createElement('div');
         qrWrapper.className = 'hotel-qr';
 
         const qrImage = document.createElement('img');
-        const encodedWebsite = encodeURIComponent(hotel.website || hotel.mapLink || '');
-        qrImage.src = `https://chart.googleapis.com/chart?cht=qr&chs=100x100&chl=${encodedWebsite}`;
+        qrImage.src = `https://chart.googleapis.com/chart?cht=qr&chs=100x100&chl=${encodeForURL(
+          absoluteDetailUrl
+        )}`;
         qrImage.alt = `QR code for ${hotel.name}`;
         qrImage.width = 100;
         qrImage.height = 100;
         qrWrapper.appendChild(qrImage);
 
-        card.appendChild(details);
-        card.appendChild(qrWrapper);
+        mainLink.appendChild(qrWrapper);
+
+        card.appendChild(mainLink);
+
+        const actions = document.createElement('div');
+        actions.className = 'hotel-actions';
+
+        const phoneDigits = onlyDigits(hotel.phone || '');
+        if (phoneDigits) {
+          actions.appendChild(
+            createActionButton({
+              href: `tel:${phoneDigits}`,
+              text: 'Call',
+              ariaLabel: `Call ${hotel.name}`,
+            })
+          );
+        }
+
+        if (hotel.address) {
+          const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeForURL(
+            hotel.address
+          )}`;
+          actions.appendChild(
+            createActionButton({
+              href: mapLink,
+              text: 'Map',
+              ariaLabel: `Open ${hotel.name} in Google Maps`,
+              target: '_blank',
+              rel: 'noopener noreferrer',
+            })
+          );
+        }
+
+        if (hotel.website) {
+          actions.appendChild(
+            createActionButton({
+              href: hotel.website,
+              text: 'Website',
+              ariaLabel: `Open website for ${hotel.name}`,
+              target: '_blank',
+              rel: 'noopener noreferrer',
+            })
+          );
+        }
+
+        if (actions.children.length) {
+          card.appendChild(actions);
+        }
 
         resultsContainer.appendChild(card);
       });
@@ -432,8 +582,11 @@
         }
 
         if (listing.website) {
-          const link = createLink({ href: listing.website, text: 'View Details' });
-          link.className = 'resource-link';
+          const link = createLink({
+            href: listing.website,
+            text: 'View Details',
+            className: 'resource-link',
+          });
           card.appendChild(link);
         }
 
@@ -491,8 +644,11 @@
         }
 
         if (resource.website) {
-          const link = createLink({ href: resource.website, text: 'Visit website' });
-          link.className = 'resource-link';
+          const link = createLink({
+            href: resource.website,
+            text: 'Visit website',
+            className: 'resource-link',
+          });
           card.appendChild(link);
         }
 
@@ -526,6 +682,7 @@
               item.description,
               item.notes,
               item.contact,
+              item.slug,
             ]
               .filter(Boolean)
               .join(' ')
@@ -568,7 +725,10 @@
           fetchJson('housing.json'),
           fetchJson('resources.json'),
         ]);
-        state.data.hotels = hotels;
+        state.data.hotels = hotels.map((hotel) => ({
+          ...hotel,
+          slug: hotel.slug ? hotel.slug : slugify(hotel.name || ''),
+        }));
         state.data.housing = housing;
         state.data.resources = resources;
         renderActiveTab();

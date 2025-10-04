@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Details | J1hub Experience</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      color: #1f2933;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    .back-link:hover,
+    .back-link:focus {
+      text-decoration: underline;
+    }
+
+    .hotel-detail {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .hotel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      color: #312e81;
+    }
+
+    .hotel-meta {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .hotel-meta strong {
+      color: #312e81;
+    }
+
+    .inline-link {
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .inline-link:hover,
+    .inline-link:focus {
+      text-decoration: underline;
+    }
+
+    .hotel-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.65rem 1.2rem;
+      border-radius: 999px;
+      background: #4f46e5;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      min-height: 44px;
+      min-width: 120px;
+      transition: background 0.2s ease;
+    }
+
+    .action-button:hover,
+    .action-button:focus {
+      background: #4338ca;
+    }
+
+    .qr-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .qr-wrapper img {
+      width: 200px;
+      height: 200px;
+      border-radius: 12px;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+    }
+
+    .qr-wrapper span {
+      font-size: 0.85rem;
+      color: #4b5563;
+    }
+
+    .message {
+      font-size: 1.05rem;
+      color: #4338ca;
+      background: #eef2ff;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 1.5rem 1.125rem 2.5rem;
+      }
+
+      .hotel-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .qr-wrapper {
+        width: 100%;
+        align-items: flex-start;
+      }
+
+      .action-button {
+        min-width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <a class="back-link" href="index.html" aria-label="Return to hotel listings">&larr; Back to listings</a>
+    <section id="message" class="message" role="status" aria-live="polite" hidden></section>
+    <article id="hotel-detail" class="hotel-detail" hidden>
+      <div class="hotel-header">
+        <div class="hotel-info">
+          <h1 id="hotel-name"></h1>
+          <p id="hotel-description" class="hotel-meta"></p>
+        </div>
+        <div class="qr-wrapper">
+          <img id="hotel-qr" src="" alt="QR code for hotel detail" width="200" height="200" />
+          <span>Scan to open on your device</span>
+        </div>
+      </div>
+      <p id="hotel-address" class="hotel-meta"></p>
+      <p id="hotel-phone" class="hotel-meta"></p>
+      <p id="hotel-stay" class="hotel-meta"></p>
+      <div id="hotel-actions" class="hotel-actions"></div>
+    </article>
+  </main>
+  <script>
+    const slugify = (value = '') =>
+      value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+    const onlyDigits = (value = '') => String(value || '').replace(/\D+/g, '');
+    const encodeForURL = (value = '') => encodeURIComponent(String(value ?? ''));
+
+    const params = new URLSearchParams(window.location.search);
+    const slugParam = params.get('id');
+
+    const messageEl = document.getElementById('message');
+    const detailEl = document.getElementById('hotel-detail');
+    const nameEl = document.getElementById('hotel-name');
+    const descriptionEl = document.getElementById('hotel-description');
+    const addressEl = document.getElementById('hotel-address');
+    const phoneEl = document.getElementById('hotel-phone');
+    const stayEl = document.getElementById('hotel-stay');
+    const actionsEl = document.getElementById('hotel-actions');
+    const qrImage = document.getElementById('hotel-qr');
+
+    const showMessage = (text) => {
+      if (!messageEl) return;
+      messageEl.textContent = text;
+      messageEl.hidden = false;
+      if (detailEl) {
+        detailEl.hidden = true;
+      }
+    };
+
+    const showNotFound = () => {
+      showMessage('Hotel not found. Please return to the listings.');
+      if (messageEl) {
+        const backLink = document.createElement('a');
+        backLink.href = 'index.html';
+        backLink.textContent = 'Back to listings';
+        backLink.className = 'inline-link';
+        backLink.setAttribute('aria-label', 'Go back to hotel listings');
+        messageEl.appendChild(document.createTextNode(' '));
+        messageEl.appendChild(backLink);
+      }
+    };
+
+    const createActionButton = ({ href, text, ariaLabel, target, rel }) => {
+      const button = document.createElement('a');
+      button.className = 'action-button';
+      button.href = href;
+      button.textContent = text;
+      if (ariaLabel) {
+        button.setAttribute('aria-label', ariaLabel);
+      }
+      if (target) {
+        button.target = target;
+      }
+      if (rel) {
+        button.rel = rel;
+      }
+      return button;
+    };
+
+    const renderHotel = (hotel, slug) => {
+      if (!detailEl) return;
+
+      const mapLink = hotel.address
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeForURL(hotel.address)}`
+        : '';
+      const phoneDigits = onlyDigits(hotel.phone || '');
+
+      detailEl.hidden = false;
+      if (messageEl) {
+        messageEl.hidden = true;
+      }
+
+      nameEl.textContent = hotel.name || 'Hotel';
+      document.title = `${hotel.name || 'Hotel'} | J1hub Experience`;
+
+      if (descriptionEl) {
+        descriptionEl.textContent = hotel.description || '';
+        descriptionEl.hidden = !hotel.description;
+      }
+
+      addressEl.textContent = '';
+      if (hotel.address) {
+        const strong = document.createElement('strong');
+        strong.textContent = 'Address:';
+        addressEl.appendChild(strong);
+        addressEl.appendChild(document.createTextNode(` ${hotel.address} `));
+        if (mapLink) {
+          const mapAnchor = document.createElement('a');
+          mapAnchor.href = mapLink;
+          mapAnchor.textContent = 'Open in Maps';
+          mapAnchor.className = 'inline-link';
+          mapAnchor.target = '_blank';
+          mapAnchor.rel = 'noopener noreferrer';
+          mapAnchor.setAttribute('aria-label', `Open ${hotel.name} in Google Maps`);
+          addressEl.appendChild(mapAnchor);
+        }
+      } else {
+        addressEl.textContent = 'Address not available.';
+      }
+
+      phoneEl.textContent = '';
+      if (hotel.phone) {
+        const strong = document.createElement('strong');
+        strong.textContent = 'Phone:';
+        phoneEl.appendChild(strong);
+        phoneEl.appendChild(document.createTextNode(` ${hotel.phone}`));
+      } else {
+        phoneEl.textContent = 'Phone not available.';
+      }
+
+      stayEl.textContent = '';
+      if (hotel.checkIn || hotel.checkOut) {
+        const strong = document.createElement('strong');
+        strong.textContent = 'Stay info:';
+        stayEl.appendChild(strong);
+        const parts = [];
+        if (hotel.checkIn) parts.push(`Check-in: ${hotel.checkIn}`);
+        if (hotel.checkOut) parts.push(`Check-out: ${hotel.checkOut}`);
+        stayEl.appendChild(document.createTextNode(` ${parts.join(' • ')}`));
+        stayEl.hidden = false;
+      } else {
+        stayEl.hidden = true;
+      }
+
+      actionsEl.innerHTML = '';
+      if (phoneDigits) {
+        actionsEl.appendChild(
+          createActionButton({
+            href: `tel:${phoneDigits}`,
+            text: 'Call',
+            ariaLabel: `Call ${hotel.name}`,
+          })
+        );
+      }
+
+      if (mapLink) {
+        actionsEl.appendChild(
+          createActionButton({
+            href: mapLink,
+            text: 'Map',
+            ariaLabel: `Open ${hotel.name} in Google Maps`,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+          })
+        );
+      }
+
+      if (hotel.website) {
+        actionsEl.appendChild(
+          createActionButton({
+            href: hotel.website,
+            text: 'Website',
+            ariaLabel: `Open website for ${hotel.name}`,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+          })
+        );
+      }
+
+      const qrTarget = new URL(`hotel.html?id=${encodeURIComponent(slug)}`, window.location.href).toString();
+      qrImage.src = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeForURL(qrTarget)}`;
+      qrImage.alt = `QR code linking to details for ${hotel.name}`;
+    };
+
+    const fetchHotels = async () => {
+      const response = await fetch('hotels.json');
+      if (!response.ok) {
+        throw new Error('Unable to load hotels list.');
+      }
+      return response.json();
+    };
+
+    const init = async () => {
+      if (!slugParam) {
+        showNotFound();
+        return;
+      }
+
+      try {
+        const hotels = await fetchHotels();
+        const hotelsWithSlugs = hotels.map((hotel) => ({
+          ...hotel,
+          slug: hotel.slug ? hotel.slug : slugify(hotel.name || ''),
+        }));
+        const normalizedSlug = slugParam.trim().toLowerCase();
+        const match = hotelsWithSlugs.find((hotel) => (hotel.slug || '').toLowerCase() === normalizedSlug);
+
+        if (!match) {
+          showNotFound();
+          return;
+        }
+
+        renderHotel(match, match.slug);
+      } catch (error) {
+        console.error(error);
+        showMessage('Unable to load hotel details. Please try again later.');
+      }
+    };
+
+    init();
+  </script>
+</body>
+</html>
