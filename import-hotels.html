@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Import Hotels CSV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f4f6fb;
+      color: #1d2533;
+    }
+
+    body {
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+    }
+
+    .card {
+      background: #ffffffcc;
+      backdrop-filter: blur(10px);
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      font-weight: 600;
+      gap: 0.5rem;
+    }
+
+    input[type="file"] {
+      padding: 0.6rem;
+      border: 1px solid #cbd5f5;
+      border-radius: 0.5rem;
+      background: #f8f9ff;
+      cursor: pointer;
+    }
+
+    button {
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.6rem;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      background: #3949ff;
+      color: #fff;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      background: #c7ccea;
+      color: #6c728f;
+      box-shadow: none;
+    }
+
+    button:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(57, 73, 255, 0.2);
+    }
+
+    .preview {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .grid-table {
+      display: grid;
+      border: 1px solid #d5dcff;
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+
+    .grid-row {
+      display: contents;
+    }
+
+    .grid-cell {
+      display: block;
+      padding: 0.75rem;
+      border-bottom: 1px solid #e2e8ff;
+      border-right: 1px solid #e2e8ff;
+      background: #ffffff;
+      word-break: break-word;
+    }
+
+    .grid-header {
+      background: #eef1ff;
+      font-weight: 600;
+    }
+
+    .grid-row:last-child .grid-cell {
+      border-bottom: none;
+    }
+
+    .grid-cell:last-child {
+      border-right: none;
+    }
+
+    .status {
+      font-size: 0.95rem;
+      color: #3949ff;
+      min-height: 1.2rem;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1.5rem;
+      }
+
+      .grid-table {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Hotel CSV Importer</h1>
+
+  <section class="card">
+    <p>
+      Upload a CSV file with columns <strong>name</strong>, <strong>address</strong>, <strong>phone</strong>,
+      <strong>website</strong>, and optional <strong>slug</strong>. Preview the records and export them as
+      a JSON array for the hotels directory.
+    </p>
+    <div class="controls">
+      <label>
+        Select CSV file
+        <input type="file" id="csvInput" accept=".csv" />
+      </label>
+      <button id="exportBtn" disabled>Export to hotels.json</button>
+      <button id="copyBtn" disabled>Copy to Clipboard</button>
+    </div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <section class="card">
+    <h2>Preview</h2>
+    <div class="preview" id="preview"></div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" integrity="sha384-NJsteVEh9UpAJZciV06P88eaJEqn3Ejj6inUeJ8V+RaH//RUW2KIiMzFxLpy0XUe" crossorigin="anonymous"></script>
+  <script>
+    const csvInput = document.getElementById('csvInput');
+    const exportBtn = document.getElementById('exportBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const previewContainer = document.getElementById('preview');
+    const status = document.getElementById('status');
+
+    let hotelData = [];
+
+    function sanitizeRow(row) {
+      const trimmedEntries = Object.entries(row).reduce((acc, [key, value]) => {
+        const trimmed = typeof value === 'string' ? value.trim() : value;
+        if (trimmed) {
+          acc[key] = trimmed;
+        }
+        return acc;
+      }, {});
+
+      const { name, address, phone, website, slug } = trimmedEntries;
+      if (!name) {
+        return null;
+      }
+
+      const hotel = { name };
+      if (address) hotel.address = address;
+      if (phone) hotel.phone = phone;
+      if (website) hotel.website = website;
+      if (slug) hotel.slug = slug;
+
+      return hotel;
+    }
+
+    function renderPreview(data) {
+      previewContainer.innerHTML = '';
+
+      if (!data.length) {
+        previewContainer.innerHTML = '<p>No rows to preview yet. Upload a CSV to begin.</p>';
+        return;
+      }
+
+      const columns = ['name', 'address', 'phone', 'website', 'slug'];
+      const grid = document.createElement('div');
+      grid.className = 'grid-table';
+      grid.style.gridTemplateColumns = `repeat(${columns.length}, minmax(140px, 1fr))`;
+
+      const headerRow = document.createElement('div');
+      headerRow.className = 'grid-row';
+      columns.forEach((column) => {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell grid-header';
+        cell.textContent = column.toUpperCase();
+        headerRow.appendChild(cell);
+      });
+      grid.appendChild(headerRow);
+
+      data.forEach((row) => {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'grid-row';
+        columns.forEach((column) => {
+          const cell = document.createElement('div');
+          cell.className = 'grid-cell';
+          cell.textContent = row[column] || '';
+          rowEl.appendChild(cell);
+        });
+        grid.appendChild(rowEl);
+      });
+
+      previewContainer.appendChild(grid);
+    }
+
+    function toFormattedJson(data) {
+      return JSON.stringify(data, null, 2);
+    }
+
+    function setStatus(message) {
+      status.textContent = message;
+      setTimeout(() => {
+        if (status.textContent === message) {
+          status.textContent = '';
+        }
+      }, 4000);
+    }
+
+    csvInput.addEventListener('change', (event) => {
+      const file = event.target.files?.[0];
+      if (!file) {
+        hotelData = [];
+        renderPreview(hotelData);
+        exportBtn.disabled = true;
+        copyBtn.disabled = true;
+        return;
+      }
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: ({ data, errors }) => {
+          if (errors.length) {
+            console.error(errors);
+            setStatus('Some rows could not be parsed. Check console for details.');
+          }
+
+          hotelData = data
+            .map(sanitizeRow)
+            .filter(Boolean);
+
+          if (!hotelData.length) {
+            setStatus('No valid records found. Ensure the CSV has a "name" column.');
+          } else {
+            setStatus(`Loaded ${hotelData.length} hotel${hotelData.length === 1 ? '' : 's'}.`);
+          }
+
+          renderPreview(hotelData);
+          const hasData = hotelData.length > 0;
+          exportBtn.disabled = !hasData;
+          copyBtn.disabled = !hasData;
+        },
+        error: (error) => {
+          console.error(error);
+          setStatus('Unable to read the CSV file.');
+          hotelData = [];
+          renderPreview(hotelData);
+          exportBtn.disabled = true;
+          copyBtn.disabled = true;
+        }
+      });
+    });
+
+    exportBtn.addEventListener('click', () => {
+      if (!hotelData.length) return;
+      const jsonString = toFormattedJson(hotelData);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'hotels.json';
+      anchor.click();
+      URL.revokeObjectURL(url);
+      setStatus('Downloaded hotels.json.');
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      if (!hotelData.length || !navigator.clipboard) return;
+      try {
+        await navigator.clipboard.writeText(toFormattedJson(hotelData));
+        setStatus('JSON copied to clipboard.');
+      } catch (error) {
+        console.error(error);
+        setStatus('Failed to copy JSON to clipboard.');
+      }
+    });
+
+    // Initialize preview
+    renderPreview(hotelData);
+  </script>
+</body>
+</html>
