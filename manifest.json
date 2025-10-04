@@ -3,6 +3,7 @@
   "short_name": "J1hub",
   "start_url": "./index.html",
   "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
   "background_color": "#ffffff",
   "theme_color": "#007BFF",
   "icons": [
