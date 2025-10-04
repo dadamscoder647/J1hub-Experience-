@@ -1,0 +1,12 @@
+{
+  "name": "J1hub Experience",
+  "short_name": "J1hub",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007BFF",
+  "icons": [
+    { "src": "j1hub-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "j1hub-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
