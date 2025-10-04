@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>J1hub – QR Sheet Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --grid-columns: 3;
+      --qr-size: 150px;
+      --page-width: 100%;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #1f2933;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin: 0 0 8px;
+      color: #0f172a;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .nav-links a {
+      color: #2563eb;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus {
+      text-decoration: underline;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 16px;
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+      margin-bottom: 24px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 140px;
+    }
+
+    .control-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    select,
+    input[type="checkbox"],
+    button {
+      font-family: inherit;
+    }
+
+    select,
+    button {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5f5;
+      font-size: 0.95rem;
+    }
+
+    select:focus,
+    button:focus {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 20px;
+    }
+
+    .checkbox-group label {
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .generate-btn {
+      background-color: #2563eb;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      align-self: flex-end;
+      padding: 10px 16px;
+    }
+
+    .generate-btn:hover,
+    .generate-btn:focus {
+      background-color: #1d4ed8;
+    }
+
+    .grid-preview-wrapper {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+    }
+
+    .grid-preview {
+      width: 100%;
+      max-width: var(--page-width);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .qr-card {
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      break-inside: avoid;
+    }
+
+    .qr-wrapper {
+      width: var(--qr-size);
+      height: var(--qr-size);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qr-card h2 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .qr-card p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    .qr-card .qr-link {
+      font-size: 0.75rem;
+      color: #64748b;
+      word-break: break-all;
+    }
+
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .control-group,
+      .checkbox-group {
+        width: 100%;
+      }
+
+      .generate-btn {
+        width: 100%;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .controls,
+      .nav-links {
+        display: none;
+      }
+
+      .qr-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="nav-links">
+        <a href="admin.html">&larr; Back to Admin</a>
+        <a href="index.html">&larr; Back to Home</a>
+      </div>
+      <h1>J1hub – QR Sheet Generator</h1>
+      <p>Customize the layout and generate printable QR sheets for all hotels.</p>
+    </header>
+
+    <section class="controls" aria-label="QR sheet controls">
+      <div class="control-group">
+        <label for="paperSize">Paper Size</label>
+        <select id="paperSize" name="paperSize">
+          <option value="letter">Letter (8.5×11 in)</option>
+          <option value="a4">A4</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="columns">Columns</label>
+        <select id="columns" name="columns">
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="qrSize">QR Size</label>
+        <select id="qrSize" name="qrSize">
+          <option value="100">100 px</option>
+          <option value="150" selected>150 px</option>
+          <option value="200">200 px</option>
+        </select>
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="useDetailLink" name="useDetailLink" checked />
+        <label for="useDetailLink">Use per-hotel detail link (hotel.html?id=&lt;slug&gt;)</label>
+      </div>
+
+      <button class="generate-btn" id="generatePdf" type="button" aria-label="Generate PDF of QR codes">Generate PDF</button>
+    </section>
+
+    <section class="grid-preview-wrapper" aria-live="polite">
+      <div id="gridPreview" class="grid-preview"></div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-MWXf1oCF8gkp8oPZxC25f6/sOlne342XQI3/OQCM0svBLmvBxG29+rsoAhH2m6q+UpBAkLTUE3S1CyeZkNljEg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-CVvazsSUub0DJ1brNJpFxgwSNqD0O6eIO0t67F1TBQJqBT9nOfHxVXkciC0G/9SZ5pGdlZkO7pRbGkO64V0JpQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNa5kE2noKGItgKeGaH1ikIze8ih/7gToYtL6vhfVqlhK/SXGEdqzVLO6S8Vyo1CEpOtdr0IW7sSLf0Q71R8aQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    const paperSizes = {
+      letter: { width: 8.5, height: 11 },
+      a4: { width: 8.27, height: 11.69 }
+    };
+
+    const DPI = 96;
+    const MARGIN_INCHES = 0.5;
+
+    let hotels = [];
+
+    const gridPreview = document.getElementById('gridPreview');
+    const paperSizeSelect = document.getElementById('paperSize');
+    const columnsSelect = document.getElementById('columns');
+    const qrSizeSelect = document.getElementById('qrSize');
+    const useDetailLinkCheckbox = document.getElementById('useDetailLink');
+    const generatePdfButton = document.getElementById('generatePdf');
+
+    function slugify(name) {
+      return name
+        ? name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+        : '';
+    }
+
+    function encodeForURL(value) {
+      return value ? encodeURIComponent(value) : '';
+    }
+
+    function onlyDigits(value) {
+      return value ? value.replace(/\D+/g, '') : '';
+    }
+
+    function truncateAddress(address) {
+      if (!address) return '';
+      const firstLine = address.split(/?
+/)[0] || '';
+      return firstLine.length > 40 ? `${firstLine.slice(0, 37)}…` : firstLine;
+    }
+
+    function getHotelSlug(hotel) {
+      if (hotel.slug && hotel.slug.trim()) {
+        return hotel.slug.trim();
+      }
+      return slugify(hotel.name || '');
+    }
+
+    function buildQrLink(hotel, useDetailLink) {
+      const slug = getHotelSlug(hotel);
+      if (useDetailLink && slug) {
+        const basePath = `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, '')}`;
+        return `${basePath}hotel.html?id=${encodeForURL(slug)}`;
+      }
+      if (hotel.website && hotel.website.trim()) {
+        return hotel.website.trim();
+      }
+      const fallbackBase = `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, '')}`;
+      return `${fallbackBase}index.html`;
+    }
+
+    function clearGrid() {
+      gridPreview.innerHTML = '';
+    }
+
+    function renderGrid() {
+      clearGrid();
+      const columns = parseInt(columnsSelect.value, 10);
+      const qrSize = parseInt(qrSizeSelect.value, 10);
+      const paperSize = paperSizes[paperSizeSelect.value];
+
+      document.documentElement.style.setProperty('--grid-columns', columns);
+      document.documentElement.style.setProperty('--qr-size', `${qrSize}px`);
+
+      const marginPx = MARGIN_INCHES * DPI * 2;
+      const pageWidthPx = paperSize.width * DPI - marginPx;
+      document.documentElement.style.setProperty('--page-width', `${pageWidthPx}px`);
+
+      hotels.forEach((hotel) => {
+        const card = document.createElement('article');
+        card.className = 'qr-card';
+
+        const qrWrapper = document.createElement('div');
+        qrWrapper.className = 'qr-wrapper';
+        qrWrapper.setAttribute('role', 'img');
+        qrWrapper.setAttribute('aria-label', `QR code for ${hotel.name}`);
+
+        const hotelName = document.createElement('h2');
+        hotelName.textContent = hotel.name || 'Unnamed Hotel';
+
+        const address = document.createElement('p');
+        address.textContent = truncateAddress(hotel.address);
+
+        const link = document.createElement('p');
+        link.className = 'qr-link';
+        const url = buildQrLink(hotel, useDetailLinkCheckbox.checked);
+        link.textContent = url;
+
+        card.appendChild(qrWrapper);
+        card.appendChild(hotelName);
+        card.appendChild(address);
+        card.appendChild(link);
+        gridPreview.appendChild(card);
+
+        new QRCode(qrWrapper, {
+          text: url,
+          width: qrSize,
+          height: qrSize,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      });
+    }
+
+    function chunkCanvas(canvas, pageWidthPt, pageHeightPt, marginPt) {
+      const pageHeightPx = (pageHeightPt / 72) * DPI;
+      const marginDoublePx = Math.max(0, (marginPt / 72) * DPI * 2);
+      const availableHeightPx = Math.max(1, pageHeightPx - marginDoublePx);
+      const chunks = [];
+      let offset = 0;
+      while (offset < canvas.height) {
+        const sliceHeight = Math.min(availableHeightPx, canvas.height - offset);
+        if (sliceHeight <= 0) {
+          break;
+        }
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceHeight;
+        const ctx = sliceCanvas.getContext('2d');
+        ctx.drawImage(canvas, 0, offset, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+        chunks.push(sliceCanvas);
+        offset += sliceHeight;
+      }
+      return chunks;
+    }
+
+    async function generatePdf() {
+      if (!hotels.length) {
+        return;
+      }
+
+      const paper = paperSizes[paperSizeSelect.value];
+      const columns = parseInt(columnsSelect.value, 10);
+      const qrSize = parseInt(qrSizeSelect.value, 10);
+
+      document.documentElement.style.setProperty('--grid-columns', columns);
+      document.documentElement.style.setProperty('--qr-size', `${qrSize}px`);
+
+      const marginPt = MARGIN_INCHES * 72;
+      const pageWidthPt = paper.width * 72;
+      const pageHeightPt = paper.height * 72;
+      const pageWidthPx = paper.width * DPI;
+
+      const originalWidth = gridPreview.style.width;
+      gridPreview.style.width = `${pageWidthPx - MARGIN_INCHES * 2 * DPI}px`;
+
+      const canvas = await html2canvas(gridPreview, {
+        scale: 2,
+        backgroundColor: '#ffffff'
+      });
+
+      gridPreview.style.width = originalWidth;
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: [pageWidthPt, pageHeightPt] });
+
+      const chunks = chunkCanvas(canvas, pageWidthPt, pageHeightPt, marginPt);
+
+      chunks.forEach((chunkCanvas, index) => {
+        if (index > 0) {
+          pdf.addPage();
+        }
+        const imgData = chunkCanvas.toDataURL('image/png');
+        const availableWidth = pageWidthPt - marginPt * 2;
+        const availableHeight = pageHeightPt - marginPt * 2;
+        const ratio = Math.min(availableWidth / chunkCanvas.width, availableHeight / chunkCanvas.height);
+        const imgWidth = chunkCanvas.width * ratio;
+        const imgHeight = chunkCanvas.height * ratio;
+        const x = (pageWidthPt - imgWidth) / 2;
+        const y = marginPt;
+        pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight, undefined, 'FAST');
+      });
+
+      pdf.save('j1hub-qr-sheet.pdf');
+    }
+
+    async function fetchHotels() {
+      try {
+        const response = await fetch('hotels.json', { cache: 'no-cache' });
+        if (!response.ok) {
+          throw new Error('Failed to load hotels');
+        }
+        hotels = await response.json();
+        renderGrid();
+      } catch (error) {
+        console.error('Error loading hotels:', error);
+        gridPreview.innerHTML = '<p>Unable to load hotels. Please try again later.</p>';
+      }
+    }
+
+    paperSizeSelect.addEventListener('change', renderGrid);
+    columnsSelect.addEventListener('change', renderGrid);
+    qrSizeSelect.addEventListener('change', renderGrid);
+    useDetailLinkCheckbox.addEventListener('change', renderGrid);
+    generatePdfButton.addEventListener('click', generatePdf);
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fetchHotels);
+    } else {
+      fetchHotels();
+    }
+  </script>
+</body>
+</html>
