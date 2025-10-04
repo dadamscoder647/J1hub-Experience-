@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Dashboard | J1hub Experience</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-sA+e2atLYOGPZ8p0GSBM94HC38qULj8sMkGGmYwH0kM="
+      crossorigin=""
+    />
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f4f6fb;
+        color: #1f2933;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        background: linear-gradient(135deg, #1d4ed8, #4338ca);
+        color: #fff;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        box-shadow: 0 16px 32px rgba(29, 78, 216, 0.25);
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 4vw, 2.4rem);
+      }
+
+      header p {
+        margin: 0.75rem auto 0;
+        max-width: 720px;
+        line-height: 1.6;
+        font-size: 1rem;
+      }
+
+      main {
+        flex: 1;
+        display: grid;
+        gap: 1.5rem;
+        padding: clamp(1rem, 4vw, 2rem);
+        max-width: 1200px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      .controls {
+        background: #fff;
+        border-radius: 18px;
+        padding: clamp(1rem, 3vw, 1.5rem);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      label {
+        font-weight: 600;
+        color: #1e3a8a;
+      }
+
+      input[type="search"] {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #bfdbfe;
+        border-radius: 14px;
+        font-size: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+
+      input[type="search"]:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+      }
+
+      .hint {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #475569;
+      }
+
+      #filter-status {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #0f172a;
+      }
+
+      #map {
+        width: 100%;
+        min-height: clamp(420px, 50vh, 640px);
+        background: #dbeafe;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+      }
+
+      .leaflet-popup-content-wrapper {
+        border-radius: 12px;
+      }
+
+      .leaflet-popup-content {
+        margin: 0;
+      }
+
+      .popup h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        color: #1e293b;
+      }
+
+      .popup a {
+        display: inline-block;
+        margin-top: 0.4rem;
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .popup a:hover,
+      .popup a:focus {
+        text-decoration: underline;
+      }
+
+      @media (min-width: 960px) {
+        main {
+          grid-template-rows: auto 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Hotel Map Dashboard</h1>
+      <p>
+        Monitor hotel locations across Wisconsin Dells. Use the filter to quickly
+        locate specific partners and open their dedicated hotel page.
+      </p>
+    </header>
+    <main>
+      <section class="controls" aria-labelledby="filter-label">
+        <label id="filter-label" for="hotel-filter">Filter hotels</label>
+        <input
+          type="search"
+          id="hotel-filter"
+          name="hotel-filter"
+          placeholder="Start typing a hotel name or address…"
+          autocomplete="off"
+        />
+        <p class="hint">Matches update automatically as you type.</p>
+        <p id="filter-status" role="status" aria-live="polite">Loading hotels…</p>
+      </section>
+      <div id="map" role="region" aria-label="Hotel map"></div>
+    </main>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-o9N1j7kPpys/kW0g2JkO/bbJ1QDs36uAr1Zi8q0UMnA="
+      crossorigin=""
+    ></script>
+    <script>
+      (function () {
+        const hotelsUrl = 'hotels.json';
+        const map = L.map('map', {
+          center: [43.6275, -89.7705],
+          zoom: 12,
+          scrollWheelZoom: true,
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }).addTo(map);
+
+        const filterInput = document.getElementById('hotel-filter');
+        const statusEl = document.getElementById('filter-status');
+
+        const geocodeCacheKey = 'dashboard-geocode-cache-v1';
+        let geocodeCache = {};
+        let lastCacheSave = 0;
+
+        const loadCache = () => {
+          try {
+            const raw = localStorage.getItem(geocodeCacheKey);
+            if (!raw) {
+              return {};
+            }
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') {
+              return parsed;
+            }
+          } catch (error) {
+            console.warn('Unable to load geocode cache', error);
+          }
+          return {};
+        };
+
+        const saveCache = () => {
+          const now = Date.now();
+          if (now - lastCacheSave < 1500) {
+            return;
+          }
+          try {
+            localStorage.setItem(geocodeCacheKey, JSON.stringify(geocodeCache));
+            lastCacheSave = now;
+          } catch (error) {
+            console.warn('Unable to save geocode cache', error);
+          }
+        };
+
+        geocodeCache = loadCache();
+
+        const slugify = (value = '') =>
+          value
+            .toString()
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .replace(/-{2,}/g, '-');
+
+        const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        const markers = [];
+
+        const ensureCoordinates = async (hotel, index) => {
+          const slug = slugify(hotel.slug || hotel.name || `hotel-${index}`);
+          const hasLatLon = (value) => typeof value === 'number' && !Number.isNaN(value);
+
+          if (hasLatLon(hotel.latitude) && hasLatLon(hotel.longitude)) {
+            const payload = { slug, lat: hotel.latitude, lon: hotel.longitude };
+            geocodeCache[slug] = payload;
+            saveCache();
+            return payload;
+          }
+
+          const cached = geocodeCache[slug];
+          if (cached && hasLatLon(cached.lat) && hasLatLon(cached.lon)) {
+            return { slug, lat: cached.lat, lon: cached.lon };
+          }
+
+          if (index > 0) {
+            await sleep(1100);
+          }
+
+          const query = `${hotel.address || hotel.name || ''}, Wisconsin Dells, WI`;
+          const url = new URL('https://nominatim.openstreetmap.org/search');
+          url.searchParams.set('q', query);
+          url.searchParams.set('format', 'json');
+          url.searchParams.set('limit', '1');
+          url.searchParams.set('addressdetails', '0');
+
+          const response = await fetch(url.toString(), {
+            headers: { 'Accept-Language': 'en' },
+          });
+
+          if (!response.ok) {
+            throw new Error(`Geocoding failed with status ${response.status}`);
+          }
+
+          const results = await response.json();
+          if (!Array.isArray(results) || results.length === 0) {
+            throw new Error('No coordinates found for hotel');
+          }
+
+          const { lat, lon } = results[0];
+          const payload = {
+            slug,
+            lat: Number.parseFloat(lat),
+            lon: Number.parseFloat(lon),
+            timestamp: Date.now(),
+          };
+          geocodeCache[slug] = payload;
+          saveCache();
+          return payload;
+        };
+
+        const renderPopup = (hotel, slug) => {
+          const encodedSlug = encodeURIComponent(slug);
+          const linkHref = `hotel.html?id=${encodedSlug}`;
+          const safeName = hotel.name || 'Hotel';
+          const safeAddress = hotel.address ? `<p>${hotel.address}</p>` : '';
+
+          return `
+            <div class="popup">
+              <h3>${safeName}</h3>
+              ${safeAddress}
+              <a href="${linkHref}">Open hotel page</a>
+            </div>
+          `;
+        };
+
+        const updateMapView = () => {
+          const visibleMarkers = markers
+            .filter((entry) => map.hasLayer(entry.marker))
+            .map((entry) => entry.marker.getLatLng());
+
+          if (visibleMarkers.length === 0) {
+            return;
+          }
+
+          if (visibleMarkers.length === 1) {
+            map.flyTo(visibleMarkers[0], 14, { duration: 0.8 });
+            return;
+          }
+
+          const bounds = L.latLngBounds(visibleMarkers);
+          map.fitBounds(bounds, { padding: [40, 40] });
+        };
+
+        const applyFilter = (query) => {
+          const normalized = query.trim().toLowerCase();
+          let matches = 0;
+
+          markers.forEach((entry) => {
+            const haystack = `${entry.hotel.name || ''} ${entry.hotel.address || ''}`
+              .toLowerCase()
+              .normalize('NFKD')
+              .replace(/[\u0300-\u036f]/g, '');
+
+            const match = !normalized || haystack.includes(normalized);
+            if (match) {
+              if (!map.hasLayer(entry.marker)) {
+                entry.marker.addTo(map);
+              }
+              matches += 1;
+            } else if (map.hasLayer(entry.marker)) {
+              map.removeLayer(entry.marker);
+            }
+          });
+
+          if (normalized) {
+            statusEl.textContent = matches
+              ? `Showing ${matches} hotel${matches === 1 ? '' : 's'} for “${query}”.`
+              : `No hotels match “${query}”.`;
+          } else {
+            statusEl.textContent = `Displaying all ${markers.length} hotels.`;
+          }
+
+          if (matches > 0) {
+            updateMapView();
+          }
+        };
+
+        filterInput.addEventListener('input', (event) => {
+          applyFilter(event.target.value);
+        });
+
+        const init = async () => {
+          try {
+            const response = await fetch(hotelsUrl, { cache: 'no-cache' });
+            if (!response.ok) {
+              throw new Error(`Unable to load hotels (${response.status})`);
+            }
+
+            const hotels = await response.json();
+            if (!Array.isArray(hotels)) {
+              throw new Error('Hotels data must be an array.');
+            }
+
+            const latLngs = [];
+
+            for (let index = 0; index < hotels.length; index += 1) {
+              const hotel = hotels[index];
+              try {
+                const { slug, lat, lon } = await ensureCoordinates(hotel, index);
+                if (
+                  typeof lat !== 'number' ||
+                  Number.isNaN(lat) ||
+                  typeof lon !== 'number' ||
+                  Number.isNaN(lon)
+                ) {
+                  continue;
+                }
+
+                const marker = L.marker([lat, lon], {
+                  title: hotel.name || slug,
+                }).addTo(map);
+                marker.bindPopup(renderPopup(hotel, slug));
+
+                markers.push({ marker, hotel, slug, lat, lon });
+                latLngs.push([lat, lon]);
+              } catch (error) {
+                console.warn('Unable to map hotel', hotel, error);
+              }
+            }
+
+            if (markers.length === 0) {
+              statusEl.textContent = 'No hotels could be mapped.';
+              return;
+            }
+
+            if (latLngs.length === 1) {
+              map.setView(latLngs[0], 14);
+            } else if (latLngs.length > 1) {
+              map.fitBounds(latLngs, { padding: [40, 40] });
+            }
+
+            statusEl.textContent = `Displaying all ${markers.length} hotels.`;
+          } catch (error) {
+            console.error(error);
+            statusEl.textContent = 'Unable to load hotel data.';
+          }
+        };
+
+        init();
+      })();
+    </script>
+  </body>
+</html>
