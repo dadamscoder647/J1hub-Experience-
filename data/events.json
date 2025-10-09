@@ -1,0 +1,6 @@
+[
+  {"id":"eng-clinic", "title":"English Clinic", "start":"2025-10-15T21:00:00", "end":"2025-10-15T22:00:00", "tags":["free","after-10pm","legal/clinic"], "venue":"Community Center A"},
+  {"id":"pickup-soccer", "title":"Pickup Soccer", "start":"2025-10-16T23:30:00", "end":"2025-10-17T01:00:00", "tags":["sports","late-night"], "venue":"Field 3"},
+  {"id":"know-rights", "title":"Know Your Rights", "start":"2025-10-17T20:00:00", "end":"2025-10-17T21:00:00", "tags":["legal/clinic"], "venue":"Hall B"},
+  {"id":"movie-night", "title":"Movie Night", "start":"2025-10-18T22:00:00", "end":"2025-10-18T23:59:00", "tags":["late-night"], "venue":"Lounge C"}
+]
