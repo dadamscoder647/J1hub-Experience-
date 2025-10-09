@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SERVICE_WORKER="$REPO_ROOT/service-worker.js"
+SERVICE_WORKER="$REPO_ROOT/pwa/service-worker.js"
 
 if [[ ! -f "$SERVICE_WORKER" ]]; then
   echo "service-worker.js not found at $SERVICE_WORKER" >&2
@@ -16,14 +16,14 @@ if [[ -z "${SUFFIX// }" ]]; then
   exit 1
 fi
 
-NEW_CACHE_VERSION="j1hub-v${SUFFIX}"
+NEW_CACHE_VERSION="v-${SUFFIX}"
 
-if ! grep -q 'const CACHE_VERSION = "j1hub-' "$SERVICE_WORKER"; then
+if ! grep -q "const CACHE_VERSION =" "$SERVICE_WORKER"; then
   echo "Unable to locate CACHE_VERSION declaration in $SERVICE_WORKER" >&2
   exit 1
 fi
 
-sed -i.bak "s/const CACHE_VERSION = \"j1hub-v[^\"]*\";/const CACHE_VERSION = \"${NEW_CACHE_VERSION}\";/" "$SERVICE_WORKER"
+sed -i.bak -E "s/const CACHE_VERSION = ['\"][^'\"]*['\"];$/const CACHE_VERSION = '${NEW_CACHE_VERSION}';/" "$SERVICE_WORKER"
 rm "$SERVICE_WORKER.bak"
 
 git -C "$REPO_ROOT" add -A

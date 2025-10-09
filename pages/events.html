@@ -3,17 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/pwa/manifest.json">
   <meta name="theme-color" content="#007BFF">
   <title>Events | J1hub Experience</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/theme.css" />
-  <link rel="stylesheet" href="css/events.css" />
+  <link rel="stylesheet" href="/assets/css/theme.css" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/safety.css" />
+  <link rel="stylesheet" href="/assets/css/events.css" />
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
+      navigator.serviceWorker.register('/pwa/service-worker.js', { scope: '/' });
     }
   </script>
 </head>
@@ -42,7 +44,12 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-MWXf1oCF8gkp8oPZxC25f6/sOlne342XQI3/OQCM0svBLmvBxG29+rsoAhH2m6q+UpBAkLTUE3S1CyeZkNljEg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="js/events.js" type="module"></script>
+  <div id="safety-root"></div>
+  <script src="/assets/js/vendor/qr.min.js"></script>
+  <script src="/assets/js/events.js" type="module"></script>
+  <script type="module">
+    import { initSafetyFab } from '/assets/js/safety.js';
+    initSafetyFab();
+  </script>
 </body>
 </html>

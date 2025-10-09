@@ -473,13 +473,13 @@ async function fetchJson(url) {
 }
 
 async function loadChecklistData() {
-  const targetUrl = `data/onboarding.${propertyCode}.json`;
+  const targetUrl = `/assets/data/onboarding.${propertyCode}.json`;
   try {
     return await fetchJson(targetUrl);
   } catch (error) {
     if (propertyCode !== 'DEFAULT') {
       try {
-        return await fetchJson('data/onboarding.DEFAULT.json');
+        return await fetchJson('/assets/data/onboarding.DEFAULT.json');
       } catch (fallbackError) {
         throw fallbackError;
       }

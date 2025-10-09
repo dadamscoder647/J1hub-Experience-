@@ -104,7 +104,7 @@ function attachEventHandlers() {
 
 async function loadResources() {
   try {
-    const response = await fetch('data/resources.json', { cache: 'no-cache' });
+    const response = await fetch('/assets/data/resources.json', { cache: 'no-cache' });
     if (!response.ok) {
       throw new Error(`Unable to load resources (status ${response.status})`);
     }

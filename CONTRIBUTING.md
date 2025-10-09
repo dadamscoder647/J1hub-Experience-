@@ -5,6 +5,12 @@
 - Avoid frameworks; stick to vanilla JavaScript and browser APIs.
 - Build HTML fragments with template strings and inject them via the DOM APIs.
 
+## Project Layout
+- Keep the public entry point at `/index.html`; secondary pages live in `/pages`.
+- Store shared styles and scripts in `/assets/css` and `/assets/js` respectively.
+- Persist JSON content and localization files under `/assets/data` and `/assets/i18n`.
+- PWA resources (manifest, service worker, offline shell) live in `/pwa`.
+
 ## Accessibility
 - Prefer semantic HTML elements for structure and meaning.
 - Provide descriptive `aria-label` or `aria-labelledby` attributes where needed.
@@ -12,7 +18,7 @@
 
 ## Internationalization (i18n)
 - Route all user-facing strings through the shared `t(key, vars?)` helper.
-- Define translations per language in `/translations/{lang}.json` files.
+- Define translations per language in `/assets/i18n/{lang}.json` files.
 - Keep translation keys descriptive and consistent across pages.
 
 ## Performance

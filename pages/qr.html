@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/pwa/manifest.json">
   <meta name="theme-color" content="#007BFF">
+  <link rel="stylesheet" href="/assets/css/theme.css" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/safety.css" />
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
+      navigator.serviceWorker.register('/pwa/service-worker.js', { scope: '/' });
     }
   </script>
   <title>QR Code Generator | J1hub</title>
@@ -320,8 +323,8 @@
           type="text"
           id="destination-path"
           name="destination-path"
-          placeholder="/events.html"
-          value="/"
+          placeholder="/pages/events.html"
+          value="/index.html"
           autocomplete="off"
         />
       </div>
@@ -376,7 +379,12 @@
     </button>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script type="module" src="js/qr.js"></script>
+  <div id="safety-root"></div>
+  <script src="/assets/js/vendor/qr.min.js"></script>
+  <script type="module" src="/assets/js/qr.js"></script>
+  <script type="module">
+    import { initSafetyFab } from '/assets/js/safety.js';
+    initSafetyFab();
+  </script>
 </body>
 </html>
