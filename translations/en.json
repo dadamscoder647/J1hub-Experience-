@@ -1,5 +1,41 @@
 {
+  "onboarding": {
+    "title": "Orientation — Week 1",
+    "resume": "Resume Orientation",
+    "addToCalendar": "Add to Calendar",
+    "progress": "{completed} of {total} completed",
+    "estimate": "≈ {minutes} min",
+    "close": "Close"
+  },
+  "safety": {
+    "fab": "Safety",
+    "safeWalk": "SafeWalk",
+    "sos": "SOS",
+    "minutes": "{minutes} min",
+    "start": "Start SafeWalk",
+    "stop": "Stop SafeWalk",
+    "contacts": "Manage contacts",
+    "sendSOS": "Send SOS",
+    "needHelp": "Need help. Last known map: {mapUrl}"
+  },
+  "events": {
+    "title": "Upcoming Experiences",
+    "rsvp": "RSVP",
+    "addToCalendar": "Add to Calendar",
+    "showMyQR": "My Event QR",
+    "filters": {
+      "after10": "After 10 PM",
+      "free": "Free",
+      "legal": "Legal & Clinics",
+      "sports": "Sports",
+      "latenight": "Late Night"
+    }
+  },
   "resources": {
+    "title": "Guided Playbooks",
+    "showToManager": "Show to Manager",
+    "steps": "Steps",
+    "progress": "Progress",
     "pageTitle": "Guided Playbooks",
     "pageDescription": "Step-by-step support for J-1 seasonal workers.",
     "playbookListLabel": "Playbooks",

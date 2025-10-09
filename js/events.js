@@ -1,15 +1,92 @@
+import { t } from './lib/i18n.js';
+
 const RSVP_STORAGE_KEY = 'events:rsvp';
 const USER_STORAGE_KEY = 'events:userId';
 const FILTER_ORDER = ['after-10pm', 'free', 'legal/clinic', 'sports', 'late-night'];
 
+const FALLBACK_TEXT = {
+  'events.title': 'Upcoming Experiences',
+  'events.rsvp': 'RSVP',
+  'events.addToCalendar': 'Add to Calendar',
+  'events.showMyQR': 'My Event QR',
+  'events.filters.after10': 'After 10 PM',
+  'events.filters.free': 'Free',
+  'events.filters.legal': 'Legal & Clinics',
+  'events.filters.sports': 'Sports',
+  'events.filters.latenight': 'Late Night'
+};
+
+const FILTER_LABEL_KEYS = new Map([
+  ['after-10pm', 'events.filters.after10'],
+  ['free', 'events.filters.free'],
+  ['legal/clinic', 'events.filters.legal'],
+  ['sports', 'events.filters.sports'],
+  ['late-night', 'events.filters.latenight']
+]);
+
 const filterRow = document.getElementById('filterRow');
 const eventsGrid = document.getElementById('eventsGrid');
 const eventsSummary = document.getElementById('eventsSummary');
+const heroTitle = document.querySelector('.events-hero h1');
 const qrModal = document.getElementById('qrModal');
 const qrCloseButton = document.getElementById('qrClose');
 const qrCanvas = document.getElementById('qrCanvas');
 const qrPayloadEl = document.getElementById('qrPayload');
 const qrTitle = document.getElementById('qrTitle');
+
+function formatTemplate(template, replacements = {}) {
+  if (typeof template !== 'string') {
+    return template;
+  }
+  return template.replace(/\{(\w+)\}/g, (_, token) => {
+    return Object.prototype.hasOwnProperty.call(replacements, token)
+      ? replacements[token]
+      : `{${token}}`;
+  });
+}
+
+async function translateValue(key, replacements = {}) {
+  try {
+    const translated = await t(key, replacements);
+    if (translated && translated !== key) {
+      return translated;
+    }
+  } catch (error) {
+    console.warn(`events: unable to translate ${key}`, error);
+  }
+
+  const fallback = FALLBACK_TEXT[key];
+  if (fallback !== undefined) {
+    return formatTemplate(fallback, replacements);
+  }
+
+  return formatTemplate(key, replacements);
+}
+
+function setElementText(element, key, replacements = {}) {
+  if (!element) {
+    return;
+  }
+  element.dataset.i18nKey = key;
+  const fallback = FALLBACK_TEXT[key];
+  const fallbackValue = fallback !== undefined ? formatTemplate(fallback, replacements) : formatTemplate(key, replacements);
+  element.textContent = fallbackValue;
+  translateValue(key, replacements)
+    .then((value) => {
+      element.textContent = value;
+    })
+    .catch((error) => {
+      console.warn(`events: failed to apply translation for ${key}`, error);
+    });
+}
+
+async function resolveFilterLabel(tag) {
+  const key = FILTER_LABEL_KEYS.get(tag);
+  if (!key) {
+    return tag.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+  return translateValue(key);
+}
 
 const state = {
   events: [],
@@ -24,37 +101,39 @@ let lastFocusedElement = null;
 bootstrap();
 
 function bootstrap() {
+  applyStaticTranslations();
   attachFilterHandler();
   attachEventHandler();
   attachModalHandlers();
   fetchEvents();
 }
 
-function fetchEvents() {
-  fetch('data/events.json', { cache: 'no-cache' })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Unable to load events (status ${response.status})`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      const sorted = [...data].sort(
-        (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
-      );
-      state.events = sorted;
-      state.eventsById = new Map(sorted.map((event) => [event.id, event]));
-      renderFilters(sorted);
-      renderEvents();
-    })
-    .catch((error) => {
-      console.error(error);
-      eventsSummary.innerHTML = `<span role="alert">Could not load events. Please refresh to try again.</span>`;
-      eventsGrid.innerHTML = '';
-    });
+function applyStaticTranslations() {
+  setElementText(heroTitle, 'events.title');
 }
 
-function renderFilters(events) {
+async function fetchEvents() {
+  try {
+    const response = await fetch('data/events.json', { cache: 'no-cache' });
+    if (!response.ok) {
+      throw new Error(`Unable to load events (status ${response.status})`);
+    }
+    const data = await response.json();
+    const sorted = [...data].sort(
+      (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+    );
+    state.events = sorted;
+    state.eventsById = new Map(sorted.map((event) => [event.id, event]));
+    await renderFilters(sorted);
+    await renderEvents();
+  } catch (error) {
+    console.error(error);
+    eventsSummary.innerHTML = `<span role="alert">Could not load events. Please refresh to try again.</span>`;
+    eventsGrid.innerHTML = '';
+  }
+}
+
+async function renderFilters(events) {
   const availableFilters = FILTER_ORDER.filter((tag) =>
     events.some((event) => event.tags && event.tags.includes(tag))
   );
@@ -64,24 +143,29 @@ function renderFilters(events) {
     return;
   }
 
-  filterRow.innerHTML = availableFilters
-    .map(
-      (tag) => `
+  const buttons = await Promise.all(
+    availableFilters.map(async (tag) => {
+      const label = await resolveFilterLabel(tag);
+      const key = FILTER_LABEL_KEYS.get(tag);
+      const dataAttribute = key ? ` data-i18n-key="${key}"` : '';
+      return `
         <button class="filter-chip" type="button" data-filter="${tag}" aria-pressed="false">
-          <span>${formatFilterLabel(tag)}</span>
-        </button>`
-    )
-    .join('');
+          <span${dataAttribute}>${escapeHtml(label)}</span>
+        </button>`;
+    })
+  );
+
+  filterRow.innerHTML = buttons.join('');
 }
 
-function renderEvents() {
+async function renderEvents() {
   const { events, filters, rsvp } = state;
   const activeFilters = Array.from(filters);
   const filteredEvents = !activeFilters.length
     ? events
     : events.filter((event) => activeFilters.every((tag) => event.tags?.includes(tag)));
 
-  updateSummary(filteredEvents.length, events.length, activeFilters);
+  await updateSummary(filteredEvents.length, events.length, activeFilters);
 
   if (!filteredEvents.length) {
     eventsGrid.innerHTML = `
@@ -90,15 +174,20 @@ function renderEvents() {
     return;
   }
 
-  const eventCards = filteredEvents
-    .map((event) => {
+  const eventCards = await Promise.all(
+    filteredEvents.map(async (event) => {
       const startDate = new Date(event.start);
       const endDate = new Date(event.end);
       const isRsvped = Boolean(rsvp[event.id]);
-      const actions = createActionsMarkup(event.id, isRsvped);
-      const tags = (event.tags || [])
-        .map((tag) => `<span class="event-tag">${formatFilterLabel(tag)}</span>`) 
-        .join('');
+      const actions = await createActionsMarkup(event.id, isRsvped);
+      const tags = await Promise.all(
+        (event.tags || []).map(async (tag) => {
+          const label = await resolveFilterLabel(tag);
+          const key = FILTER_LABEL_KEYS.get(tag);
+          const dataAttribute = key ? ` data-i18n-key="${key}"` : '';
+          return `<span class="event-tag"${dataAttribute}>${escapeHtml(label)}</span>`;
+        })
+      );
 
       return `
         <article class="event-card" data-event-id="${event.id}">
@@ -107,41 +196,45 @@ function renderEvents() {
             <span>${formatDateTimeRange(startDate, endDate)}</span>
             <span>${escapeHtml(event.venue)}</span>
           </div>
-          <div class="event-tags">${tags}</div>
+          <div class="event-tags">${tags.join('')}</div>
           <div class="event-actions">${actions}</div>
         </article>
       `;
     })
-    .join('');
+  );
 
-  eventsGrid.innerHTML = eventCards;
+  eventsGrid.innerHTML = eventCards.join('');
 }
 
-function createActionsMarkup(eventId, isRsvped) {
+async function createActionsMarkup(eventId, isRsvped) {
   const rsvpClasses = ['event-button', 'primary'];
   if (isRsvped) {
     rsvpClasses.push('is-rsvped');
   }
 
-  const rsvpLabel = isRsvped ? 'RSVP’d' : 'RSVP';
+  const baseRsvpLabel = await translateValue('events.rsvp');
+  const rsvpLabel = isRsvped ? `${baseRsvpLabel}’d` : baseRsvpLabel;
   const rsvpAriaPressed = isRsvped ? 'true' : 'false';
+  const addToCalendarLabel = await translateValue('events.addToCalendar');
+  const qrLabel = await translateValue('events.showMyQR');
 
   return `
-    <button class="${rsvpClasses.join(' ')}" type="button" data-action="rsvp" aria-pressed="${rsvpAriaPressed}">
-      ${rsvpLabel}
+    <button class="${rsvpClasses.join(' ')}" type="button" data-action="rsvp" aria-pressed="${rsvpAriaPressed}" data-i18n-key="events.rsvp">
+      ${escapeHtml(rsvpLabel)}
     </button>
-    <button class="event-button" type="button" data-action="ics">Add to Calendar</button>
-    <button class="event-button" type="button" data-action="qr">My Event QR</button>
+    <button class="event-button" type="button" data-action="ics" data-i18n-key="events.addToCalendar">${escapeHtml(addToCalendarLabel)}</button>
+    <button class="event-button" type="button" data-action="qr" data-i18n-key="events.showMyQR">${escapeHtml(qrLabel)}</button>
   `;
 }
 
-function updateSummary(visibleCount, totalCount, activeFilters) {
+async function updateSummary(visibleCount, totalCount, activeFilters) {
+  const filterLabels = await Promise.all(activeFilters.map((tag) => resolveFilterLabel(tag)));
   const filterLabel = activeFilters.length
-    ? `Active filters: ${activeFilters.map((tag) => formatFilterLabel(tag)).join(', ')}`
+    ? `Active filters: ${filterLabels.join(', ')}`
     : 'No filters applied';
   eventsSummary.innerHTML = `
     <span>Showing ${visibleCount} of ${totalCount} events</span>
-    <span>${filterLabel}</span>
+    <span>${escapeHtml(filterLabel)}</span>
   `;
 }
 
@@ -161,7 +254,9 @@ function attachFilterHandler() {
       button.setAttribute('aria-pressed', 'true');
     }
 
-    renderEvents();
+    renderEvents().catch((error) => {
+      console.error('events: failed to re-render after filter change', error);
+    });
   });
 }
 
@@ -337,10 +432,6 @@ function formatIcsDate(date) {
     pad(date.getMinutes()) +
     pad(date.getSeconds())
   );
-}
-
-function formatFilterLabel(tag) {
-  return tag.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function escapeHtml(value) {

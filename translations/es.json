@@ -1,5 +1,41 @@
 {
+  "onboarding": {
+    "title": "Orientación — Semana 1",
+    "resume": "Reanudar orientación",
+    "addToCalendar": "Agregar al calendario",
+    "progress": "{completed} de {total} completadas",
+    "estimate": "≈ {minutes} min",
+    "close": "Cerrar"
+  },
+  "safety": {
+    "fab": "Seguridad",
+    "safeWalk": "SafeWalk",
+    "sos": "SOS",
+    "minutes": "{minutes} min",
+    "start": "Iniciar SafeWalk",
+    "stop": "Detener SafeWalk",
+    "contacts": "Administrar contactos",
+    "sendSOS": "Enviar SOS",
+    "needHelp": "Necesito ayuda. Última ubicación: {mapUrl}"
+  },
+  "events": {
+    "title": "Próximas experiencias",
+    "rsvp": "Confirmar",
+    "addToCalendar": "Agregar al calendario",
+    "showMyQR": "Mi QR del evento",
+    "filters": {
+      "after10": "Después de las 10 PM",
+      "free": "Gratis",
+      "legal": "Legal y clínicas",
+      "sports": "Deportes",
+      "latenight": "Noche tarde"
+    }
+  },
   "resources": {
+    "title": "Guías paso a paso",
+    "showToManager": "Mostrar al gerente",
+    "steps": "Pasos",
+    "progress": "Progreso",
     "pageTitle": "Guías paso a paso",
     "pageDescription": "Apoyo paso a paso para trabajadores temporales J-1.",
     "playbookListLabel": "Guías",

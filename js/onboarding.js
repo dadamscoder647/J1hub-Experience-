@@ -1,3 +1,5 @@
+import { t } from './lib/i18n.js';
+
 const hub = (window.J1Hub = window.J1Hub || {});
 const router = window.__J1Router || {};
 
@@ -5,7 +7,7 @@ const FALLBACK_TRANSLATIONS = {
   'onboarding.resume': 'Resume Orientation',
   'onboarding.title': 'Orientation — Week 1',
   'onboarding.progress': '{completed} of {total} completed',
-  'onboarding.add_to_calendar': 'Add to Calendar',
+  'onboarding.addToCalendar': 'Add to Calendar',
   'onboarding.estimate': '≈ {minutes} min',
   'onboarding.close': 'Close',
 };
@@ -29,22 +31,53 @@ let autoOpenHandled = false;
 let previousFocus = null;
 let isModalOpen = false;
 
-function translate(key, replacements = {}) {
-  if (typeof hub.translate === 'function') {
-    const translated = hub.translate(key, replacements);
-    if (translated && translated !== key) {
-      return translated;
-    }
+function formatTemplate(template, replacements = {}) {
+  if (typeof template !== 'string') {
+    return template;
   }
-  const fallback = FALLBACK_TRANSLATIONS[key];
-  if (!fallback) {
-    return key;
-  }
-  return fallback.replace(/\{(\w+)\}/g, (_, token) => {
+  return template.replace(/\{(\w+)\}/g, (_, token) => {
     return Object.prototype.hasOwnProperty.call(replacements, token)
       ? replacements[token]
       : `{${token}}`;
   });
+}
+
+async function resolveTranslation(key, replacements = {}) {
+  try {
+    const translated = await t(key, replacements);
+    if (translated && translated !== key) {
+      return translated;
+    }
+  } catch (error) {
+    console.warn(`onboarding: unable to translate ${key}`, error);
+  }
+
+  const fallback = FALLBACK_TRANSLATIONS[key];
+  if (fallback !== undefined) {
+    return formatTemplate(fallback, replacements);
+  }
+
+  return formatTemplate(key, replacements);
+}
+
+function setTextWithTranslation(element, key, replacements = {}) {
+  if (!element) {
+    return Promise.resolve('');
+  }
+  element.dataset.i18nKey = key;
+  const fallback = FALLBACK_TRANSLATIONS[key];
+  const fallbackValue = fallback !== undefined ? formatTemplate(fallback, replacements) : formatTemplate(key, replacements);
+  element.textContent = fallbackValue;
+
+  return resolveTranslation(key, replacements)
+    .then((value) => {
+      element.textContent = value;
+      return value;
+    })
+    .catch((error) => {
+      console.warn(`onboarding: failed to apply translation for ${key}`, error);
+      return fallbackValue;
+    });
 }
 
 function getStoredProperty() {
@@ -135,7 +168,9 @@ function buildIcsDataUrl(task) {
   const dtStart = formatIcsDate(startDate);
   const dtEnd = formatIcsDate(endDate);
   const summary = escapeIcsText(`J1Hub: ${task.label}`);
-  const description = escapeIcsText(checklistData?.title || translate('onboarding.title'));
+  const description = escapeIcsText(
+    checklistData?.title || FALLBACK_TRANSLATIONS['onboarding.title']
+  );
   const uid = `${task.id}-${propertyCode}-${startDate.getTime()}@j1hub.local`;
   const icsContent = [
     'BEGIN:VCALENDAR',
@@ -162,41 +197,64 @@ function updateProgressText() {
   }
   const total = Array.isArray(checklistData.tasks) ? checklistData.tasks.length : 0;
   const completedCount = completedTasks.size;
-  progressEl.textContent = translate('onboarding.progress', {
+  setTextWithTranslation(progressEl, 'onboarding.progress', {
     completed: completedCount,
     total,
   });
 }
 
 function updateTaskTranslations() {
+  const updates = [];
   taskNodeRegistry.forEach((node) => {
     if (node.estimateEl) {
-      node.estimateEl.textContent = translate('onboarding.estimate', {
-        minutes: node.task.est_min ?? 15,
-      });
+      updates.push(
+        setTextWithTranslation(node.estimateEl, 'onboarding.estimate', {
+          minutes: node.task.est_min ?? 15,
+        })
+      );
     }
     if (node.calendarLink) {
-      node.calendarLink.textContent = translate('onboarding.add_to_calendar');
-      node.calendarLink.setAttribute(
-        'aria-label',
-        `${translate('onboarding.add_to_calendar')} – ${node.task.label}`
+      const labelPromise = setTextWithTranslation(node.calendarLink, 'onboarding.addToCalendar');
+      updates.push(
+        labelPromise.then((labelText) => {
+          node.calendarLink.setAttribute('aria-label', `${labelText} – ${node.task.label}`);
+        })
       );
     }
   });
+
+  if (updates.length) {
+    Promise.allSettled(updates).catch((error) => {
+      console.warn('onboarding: failed to refresh task translations', error);
+    });
+  }
 }
 
 function applyTranslations() {
   if (resumeButtonEl) {
-    resumeButtonEl.textContent = translate('onboarding.resume');
+    setTextWithTranslation(resumeButtonEl, 'onboarding.resume');
   }
   if (closeButtonEl) {
-    closeButtonEl.textContent = translate('onboarding.close');
+    setTextWithTranslation(closeButtonEl, 'onboarding.close');
   }
   if (titleEl) {
-    const translatedTitle = translate('onboarding.title');
-    titleEl.textContent = translatedTitle && translatedTitle !== 'onboarding.title'
-      ? translatedTitle
-      : checklistData?.title || FALLBACK_TRANSLATIONS['onboarding.title'];
+    titleEl.dataset.i18nKey = 'onboarding.title';
+    const fallbackTitle = checklistData?.title || FALLBACK_TRANSLATIONS['onboarding.title'];
+    titleEl.textContent = fallbackTitle;
+    resolveTranslation('onboarding.title')
+      .then((value) => {
+        if (value && value !== FALLBACK_TRANSLATIONS['onboarding.title']) {
+          titleEl.textContent = value;
+        } else if (checklistData?.title) {
+          titleEl.textContent = checklistData.title;
+        } else {
+          titleEl.textContent = FALLBACK_TRANSLATIONS['onboarding.title'];
+        }
+      })
+      .catch((error) => {
+        console.warn('onboarding: failed to translate title', error);
+        titleEl.textContent = fallbackTitle;
+      });
   }
   updateProgressText();
   updateTaskTranslations();
@@ -237,7 +295,7 @@ function renderTasks() {
     label.textContent = task.label;
 
     const estimate = document.createElement('small');
-    estimate.textContent = translate('onboarding.estimate', {
+    setTextWithTranslation(estimate, 'onboarding.estimate', {
       minutes: task.est_min ?? 15,
     });
 
@@ -251,11 +309,17 @@ function renderTasks() {
     const calendarLink = document.createElement('a');
     calendarLink.href = buildIcsDataUrl(task);
     calendarLink.download = `J1Hub-${task.id}.ics`;
-    calendarLink.textContent = translate('onboarding.add_to_calendar');
-    calendarLink.setAttribute(
-      'aria-label',
-      `${translate('onboarding.add_to_calendar')} – ${task.label}`
+    const calendarLabelPromise = setTextWithTranslation(
+      calendarLink,
+      'onboarding.addToCalendar'
     );
+    calendarLabelPromise
+      .then((labelText) => {
+        calendarLink.setAttribute('aria-label', `${labelText} – ${task.label}`);
+      })
+      .catch((error) => {
+        console.warn('onboarding: failed to set calendar label', error);
+      });
     calendarLink.addEventListener('click', () => {
       calendarLink.href = buildIcsDataUrl(task);
     });

@@ -29,10 +29,10 @@ const DEFAULT_UI = {
 };
 
 const UI_KEYS = {
-  pageTitle: 'resources.pageTitle',
+  pageTitle: 'resources.title',
   pageDescription: 'resources.pageDescription',
   playbookListLabel: 'resources.playbookListLabel',
-  showManager: 'resources.actions.showManager',
+  showManager: 'resources.showToManager',
   hideManager: 'resources.actions.hideManager',
   viewMap: 'resources.actions.viewMap',
   managerLead: 'resources.managerLead',
@@ -137,11 +137,16 @@ function applyUiText() {
   document.title = state.ui.pageTitle;
   const activeLang = localStorage.getItem('lang') || 'en';
   document.documentElement.setAttribute('lang', activeLang);
+  pageTitleEl.dataset.i18nKey = UI_KEYS.pageTitle;
   pageTitleEl.textContent = state.ui.pageTitle;
+  pageDescriptionEl.dataset.i18nKey = UI_KEYS.pageDescription;
   pageDescriptionEl.textContent = state.ui.pageDescription;
   resourceList.setAttribute('aria-label', state.ui.playbookListLabel);
+  mapLink.dataset.i18nKey = UI_KEYS.viewMap;
   mapLink.textContent = state.ui.viewMap;
+  emptyDetail.dataset.i18nKey = UI_KEYS.emptyDetail;
   emptyDetail.textContent = state.ui.emptyDetail;
+  managerToggle.dataset.i18nKey = UI_KEYS.showManager;
   managerToggle.textContent = state.ui.showManager;
   managerToggle.setAttribute('aria-pressed', String(state.managerVisible));
 }
@@ -157,6 +162,7 @@ async function renderResourceList() {
 
     const titleSpan = document.createElement('span');
     titleSpan.className = 'resource-item-title';
+    titleSpan.dataset.i18nKey = `resources.playbooks.${resource.id}.title`;
     titleSpan.textContent = await maybeTranslate(
       `resources.playbooks.${resource.id}.title`,
       resource.title
@@ -164,6 +170,7 @@ async function renderResourceList() {
 
     const estimateSpan = document.createElement('span');
     estimateSpan.className = 'resource-item-estimate';
+    estimateSpan.dataset.i18nKey = 'resources.estimate';
     estimateSpan.textContent = await maybeTranslate(
       'resources.estimate',
       ({ minutes }) => `≈ ${minutes} min`,
@@ -199,16 +206,22 @@ async function renderDetail() {
   detailHeader.hidden = false;
   stepList.hidden = false;
 
+  detailTitle.dataset.i18nKey = `resources.playbooks.${resource.id}.title`;
   detailTitle.textContent = await maybeTranslate(
     `resources.playbooks.${resource.id}.title`,
     resource.title
   );
 
+  detailEstimate.dataset.i18nKey = 'resources.estimate';
   detailEstimate.textContent = await maybeTranslate(
     'resources.estimate',
     ({ minutes }) => `≈ ${minutes} min`,
     { minutes: resource.est_min }
   );
+
+  const stepsLabel = await maybeTranslate('resources.steps', 'Steps');
+  stepList.dataset.i18nKey = 'resources.steps';
+  stepList.setAttribute('aria-label', stepsLabel);
 
   if (resource.map_link) {
     mapLink.href = resource.map_link;
@@ -240,6 +253,7 @@ async function renderSteps(resource) {
 
     const label = document.createElement('label');
     label.setAttribute('for', checkbox.id);
+    label.dataset.i18nKey = `resources.playbooks.${resource.id}.steps.${step.id}`;
     label.textContent = await maybeTranslate(
       `resources.playbooks.${resource.id}.steps.${step.id}`,
       step.label
@@ -266,6 +280,7 @@ async function renderManagerCard(resource = state.resources.find((entry) => entr
   managerCard.hidden = false;
   managerCard.classList.add('is-visible');
 
+  managerLead.dataset.i18nKey = UI_KEYS.managerLead;
   managerLead.textContent = state.ui.managerLead;
   managerLines.innerHTML = '';
 
@@ -278,18 +293,21 @@ async function renderManagerCard(resource = state.resources.find((entry) => entr
     )
   );
 
-  for (const line of lines) {
+  lines.forEach((line, index) => {
     const p = document.createElement('p');
     p.className = 'manager-card-line';
+    p.dataset.i18nKey = `resources.playbooks.${resource.id}.manager_card.${index}`;
     p.textContent = line;
     managerLines.appendChild(p);
-  }
+  });
 }
 
 function updateManagerToggle() {
   if (state.managerVisible) {
+    managerToggle.dataset.i18nKey = UI_KEYS.hideManager;
     managerToggle.textContent = state.ui.hideManager;
   } else {
+    managerToggle.dataset.i18nKey = UI_KEYS.showManager;
     managerToggle.textContent = state.ui.showManager;
   }
   managerToggle.setAttribute('aria-pressed', String(state.managerVisible));
