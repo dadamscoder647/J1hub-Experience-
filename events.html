@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#007BFF">
+  <title>Events | J1hub Experience</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/events.css" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</head>
+<body class="theme-DEFAULT">
+  <main>
+    <section class="events-hero">
+      <h1>Upcoming Experiences</h1>
+      <p>Discover late-night meetups, legal clinics, and community gatherings tailored for J-1 visitors. Filter, RSVP, and download check-in QR codes right from this page.</p>
+      <div class="filter-row" id="filterRow" role="group" aria-label="Event filters"></div>
+    </section>
+
+    <section class="events-wrapper">
+      <div class="events-summary" id="eventsSummary" role="status" aria-live="polite">
+        <span>Loading events…</span>
+      </div>
+      <div class="events-grid" id="eventsGrid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <div class="qr-modal" id="qrModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="qr-dialog">
+      <button class="qr-close" type="button" id="qrClose" aria-label="Close QR dialog">&times;</button>
+      <h3 id="qrTitle">Event Check-in QR</h3>
+      <div id="qrCanvas" aria-live="polite"></div>
+      <pre class="qr-payload" id="qrPayload"></pre>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-MWXf1oCF8gkp8oPZxC25f6/sOlne342XQI3/OQCM0svBLmvBxG29+rsoAhH2m6q+UpBAkLTUE3S1CyeZkNljEg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="js/events.js" type="module"></script>
+</body>
+</html>
