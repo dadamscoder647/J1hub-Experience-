@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#007BFF">
+  <link rel="stylesheet" href="css/theme.css">
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
@@ -16,15 +17,15 @@
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f5f7fa;
-      color: #1f2933;
+      background: var(--theme-background);
+      color: var(--theme-text);
     }
 
     header {
       text-align: center;
       padding: 2rem 1rem 1rem;
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
-      color: #fff;
+      background: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
+      color: var(--theme-header-text);
       box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
       border-bottom-left-radius: 18px;
       border-bottom-right-radius: 18px;
@@ -55,15 +56,15 @@
     }
 
     .search-container input[type='search']:focus {
-      box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.45),
+      box-shadow: 0 0 0 3px var(--theme-focus-ring),
         0 12px 20px rgba(15, 23, 42, 0.18);
     }
 
     .filter-chip {
       border: none;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.25);
-      color: #eef2ff;
+      background: var(--theme-chip-bg);
+      color: var(--theme-chip-text);
       font-weight: 600;
       padding: 0.45rem 1rem;
       cursor: pointer;
@@ -94,24 +95,24 @@
 
     .language-toggle button:hover,
     .language-toggle button:focus {
-      background: rgba(79, 70, 229, 0.35);
+      background: var(--theme-chip-hover);
       transform: translateY(-1px);
     }
 
     .language-toggle button.is-active {
-      background: #4338ca;
+      background: var(--theme-primary-dark);
       color: #fff;
     }
 
     .filter-chip:hover,
     .filter-chip:focus {
-      background: rgba(255, 255, 255, 0.35);
+      background: var(--theme-chip-hover);
       transform: translateY(-1px);
     }
 
     .filter-chip.is-active {
-      background: #4338ca;
-      color: #fff;
+      background: var(--theme-primary-dark);
+      color: var(--theme-header-text);
     }
 
     .tablist {
@@ -147,7 +148,7 @@
       justify-content: space-between;
       gap: 1rem;
       margin-bottom: 1rem;
-      color: #4338ca;
+      color: var(--theme-primary-dark);
       font-weight: 600;
     }
 
@@ -184,7 +185,7 @@
     }
 
     .hotel-card-main:focus-visible {
-      outline: 3px solid #4f46e5;
+      outline: 3px solid var(--theme-primary);
       outline-offset: 4px;
       border-radius: 12px;
     }
@@ -197,7 +198,7 @@
     .resource-card h2 {
       margin: 0 0 0.5rem;
       font-size: 1.3rem;
-      color: #312e81;
+      color: var(--theme-card-title);
     }
 
     .hotel-meta,
@@ -212,8 +213,8 @@
       display: inline-block;
       margin-top: 0.8rem;
       padding: 0.55rem 0.9rem;
-      background: #4f46e5;
-      color: #fff;
+      background: var(--theme-primary);
+      color: var(--theme-header-text);
       text-decoration: none;
       border-radius: 999px;
       font-size: 0.9rem;
@@ -225,7 +226,7 @@
     a.hotel-link:focus,
     a.resource-link:hover,
     a.resource-link:focus {
-      background: #4338ca;
+      background: var(--theme-primary-dark);
     }
 
     .hotel-qr {
@@ -253,8 +254,8 @@
       justify-content: center;
       padding: 0.55rem 0.9rem;
       border-radius: 999px;
-      background: #4f46e5;
-      color: #fff;
+      background: var(--theme-primary);
+      color: var(--theme-header-text);
       text-decoration: none;
       font-size: 0.9rem;
       font-weight: 600;
@@ -265,7 +266,7 @@
 
     .action-button:hover,
     .action-button:focus {
-      background: #4338ca;
+      background: var(--theme-primary-dark);
     }
 
     .tag-list {
@@ -276,12 +277,177 @@
     }
 
     .tag {
-      background: rgba(79, 70, 229, 0.12);
-      color: #4c1d95;
+      background: var(--theme-tag-bg);
+      color: var(--theme-tag-text);
       padding: 0.25rem 0.6rem;
       border-radius: 999px;
       font-size: 0.75rem;
       font-weight: 600;
+    }
+
+    .resume-orientation {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1.5rem auto 0;
+      padding: 0.75rem 1.5rem;
+      border-radius: 999px;
+      border: none;
+      background: var(--theme-primary);
+      color: var(--theme-header-text);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
+    }
+
+    .resume-orientation:hover,
+    .resume-orientation:focus {
+      background: var(--theme-primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .resume-orientation:focus-visible {
+      outline: 3px solid var(--theme-focus-ring-outline);
+      outline-offset: 4px;
+    }
+
+    .onboarding-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 999;
+    }
+
+    .onboarding-backdrop[hidden] {
+      display: none;
+    }
+
+    .onboarding-modal {
+      background: var(--theme-modal-bg);
+      color: var(--theme-text);
+      border-radius: 18px;
+      width: min(520px, 100%);
+      max-height: 90vh;
+      overflow: hidden;
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .onboarding-modal header {
+      background: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
+      color: var(--theme-header-text);
+      padding: 1.5rem 1.5rem 1rem;
+      text-align: left;
+      border-radius: 18px 18px 0 0;
+      box-shadow: none;
+    }
+
+    .onboarding-modal header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .onboarding-modal header p {
+      margin: 0.5rem 0 0;
+      font-weight: 500;
+    }
+
+    .onboarding-modal main {
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .onboarding-modal footer {
+      padding: 1rem 1.5rem 1.5rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    .onboarding-progress {
+      font-weight: 600;
+      color: var(--theme-primary-dark);
+      margin-bottom: 1rem;
+    }
+
+    .onboarding-task-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .onboarding-task {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+    }
+
+    .onboarding-task-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .onboarding-task label {
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .onboarding-task small {
+      color: var(--theme-primary);
+      font-weight: 600;
+    }
+
+    .onboarding-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .onboarding-actions a {
+      text-decoration: none;
+      background: var(--theme-primary);
+      color: var(--theme-header-text);
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: background 0.2s ease;
+    }
+
+    .onboarding-actions a:hover,
+    .onboarding-actions a:focus {
+      background: var(--theme-primary-dark);
+    }
+
+    .onboarding-close {
+      border: none;
+      border-radius: 999px;
+      padding: 0.6rem 1rem;
+      font-weight: 600;
+      background: var(--theme-chip-bg);
+      color: var(--theme-text);
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .onboarding-close:hover,
+    .onboarding-close:focus {
+      background: var(--theme-chip-hover);
     }
 
     @media (max-width: 600px) {
@@ -329,6 +495,65 @@
   </style>
 </head>
 <body>
+  <script>
+    (function () {
+      const router = (window.__J1Router = {});
+      const params = new URLSearchParams(window.location.search);
+      const propParam = (params.get('prop') || '').trim();
+      const langParam = (params.get('lang') || '').trim();
+
+      function applyThemeClass(propertyCode) {
+        if (!propertyCode || !document.body) {
+          return;
+        }
+        const existing = Array.from(document.body.classList);
+        existing.forEach((className) => {
+          if (/^theme-/i.test(className)) {
+            document.body.classList.remove(className);
+          }
+        });
+        document.body.classList.add(`theme-${propertyCode}`);
+      }
+
+      let normalizedProp = null;
+      try {
+        if (propParam) {
+          normalizedProp = propParam.toUpperCase();
+          localStorage.setItem('prop', normalizedProp);
+          router.propFromUrl = normalizedProp;
+        } else {
+          const storedProp = localStorage.getItem('prop');
+          normalizedProp = storedProp ? storedProp.toUpperCase() : null;
+        }
+      } catch (error) {
+        normalizedProp = propParam ? propParam.trim().toUpperCase() : null;
+      }
+
+      if (normalizedProp) {
+        applyThemeClass(normalizedProp);
+      }
+
+      let normalizedLang = null;
+      try {
+        if (langParam) {
+          normalizedLang = langParam.toLowerCase();
+          localStorage.setItem('lang', normalizedLang);
+          localStorage.setItem('preferredLanguage', normalizedLang);
+          router.langFromUrl = normalizedLang;
+        } else {
+          const storedLang =
+            localStorage.getItem('preferredLanguage') || localStorage.getItem('lang');
+          normalizedLang = storedLang ? storedLang.toLowerCase() : null;
+        }
+      } catch (error) {
+        normalizedLang = langParam ? langParam.trim().toLowerCase() : null;
+      }
+
+      if (normalizedLang) {
+        document.documentElement.setAttribute('lang', normalizedLang);
+      }
+    })();
+  </script>
   <header>
     <h1 data-i18n="app.title">🏨 Wisconsin Dells Experience Hub</h1>
     <div
@@ -409,6 +634,9 @@
     </nav>
   </header>
   <main>
+    <button type="button" class="resume-orientation" id="resume-orientation" data-i18n="onboarding.resume">
+      Resume Orientation
+    </button>
     <div class="results-meta" id="results-meta" aria-live="polite"></div>
     <section
       id="results"
@@ -457,6 +685,8 @@
       currentLanguage: 'en',
       supported: ['en', 'es', 'pt'],
     };
+    const hub = (window.J1Hub = window.J1Hub || {});
+    const languageListeners = new Set();
 
     function formatTemplate(template, replacements = {}) {
       let result = template;
@@ -479,6 +709,28 @@
         }
       }
       return formatTemplate(key, replacements);
+    }
+
+    hub.translate = (key, replacements = {}) => translate(key, replacements);
+    hub.getCurrentLanguage = () => i18n.currentLanguage;
+    hub.getTranslations = () => ({ ...i18n.translations });
+    hub.onLanguageChange = function (callback) {
+      if (typeof callback !== 'function') {
+        return () => {};
+      }
+      languageListeners.add(callback);
+      callback(i18n.currentLanguage);
+      return () => languageListeners.delete(callback);
+    };
+
+    function notifyLanguageChange(language) {
+      languageListeners.forEach((listener) => {
+        try {
+          listener(language);
+        } catch (error) {
+          console.error('Language listener failed', error);
+        }
+      });
     }
 
     function updateLanguageToggle(activeLanguage) {
@@ -550,6 +802,7 @@
       updateLanguageToggle(normalized);
       updateStaticText();
       renderActiveTab(searchInput ? searchInput.value : '');
+      notifyLanguageChange(normalized);
     }
 
     function slugify(value = '') {
@@ -884,7 +1137,7 @@
         const messageKey = tab?.emptyKey || 'messages.no_results';
         const emptyMessage = translate(messageKey);
         const messageElement = document.createElement('p');
-        messageElement.style.color = '#4f46e5';
+        messageElement.style.color = 'var(--theme-primary)';
         messageElement.style.fontWeight = '600';
         messageElement.textContent = emptyMessage;
         resultsContainer.appendChild(messageElement);
@@ -1000,5 +1253,6 @@
 
     initialize();
   </script>
+  <script type="module" src="js/onboarding.js"></script>
 </body>
 </html>

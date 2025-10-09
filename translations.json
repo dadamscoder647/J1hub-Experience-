@@ -31,7 +31,13 @@
         "aria.qrCode": "QR code for {name}",
         "aria.call": "Call {name}",
         "aria.map": "Open {name} in Google Maps",
-        "aria.website": "Open website for {name}"
+        "aria.website": "Open website for {name}",
+        "onboarding.resume": "Resume Orientation",
+        "onboarding.title": "Orientation — Week 1",
+        "onboarding.progress": "{completed} of {total} completed",
+        "onboarding.add_to_calendar": "Add to Calendar",
+        "onboarding.estimate": "≈ {minutes} min",
+        "onboarding.close": "Close"
     },
     "es": {
         "app.title": "\ud83c\udfe8 Centro de Experiencia de Wisconsin Dells",
@@ -65,7 +71,13 @@
         "aria.qrCode": "C\u00f3digo QR de {name}",
         "aria.call": "Llamar a {name}",
         "aria.map": "Abrir {name} en Google Maps",
-        "aria.website": "Abrir el sitio web de {name}"
+        "aria.website": "Abrir el sitio web de {name}",
+        "onboarding.resume": "Reanudar orientación",
+        "onboarding.title": "Orientación — Semana 1",
+        "onboarding.progress": "{completed} de {total} completadas",
+        "onboarding.add_to_calendar": "Agregar al calendario",
+        "onboarding.estimate": "≈ {minutes} min",
+        "onboarding.close": "Cerrar"
     },
     "pt": {
         "app.title": "\ud83c\udfe8 Central de Experi\u00eancias de Wisconsin Dells",
