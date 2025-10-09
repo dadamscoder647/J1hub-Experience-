@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#007BFF">
+  <link rel="stylesheet" href="css/safety.css">
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
@@ -385,6 +386,11 @@
     };
 
     init();
+  </script>
+  <div id="safety-root"></div>
+  <script type="module">
+    import { initSafetyFab } from './js/safety.js';
+    initSafetyFab();
   </script>
 </body>
 </html>
