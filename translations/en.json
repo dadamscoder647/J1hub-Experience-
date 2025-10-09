@@ -1,0 +1,56 @@
+{
+  "resources": {
+    "pageTitle": "Guided Playbooks",
+    "pageDescription": "Step-by-step support for J-1 seasonal workers.",
+    "playbookListLabel": "Playbooks",
+    "actions": {
+      "showManager": "Show to Manager",
+      "hideManager": "Hide Manager Card",
+      "viewMap": "Open map"
+    },
+    "managerLead": "Show this screen to your manager.",
+    "emptyState": "Select a playbook to see the checklist and manager card.",
+    "estimate": "≈ {minutes} min",
+    "playbooks": {
+      "bank-account": {
+        "title": "Open a Bank Account",
+        "steps": {
+          "pick-bank": "Pick a nearby bank from the map",
+          "bring-id": "Bring passport + I-94 + job offer",
+          "deposit": "Bring initial deposit (if required)"
+        },
+        "manager_card": {
+          "0": "Hi, I'm a seasonal worker.",
+          "1": "I'd like to open a basic checking account.",
+          "2": "I have my passport and I-94."
+        }
+      },
+      "ssn-appointment": {
+        "title": "Apply for a Social Security Number",
+        "steps": {
+          "collect-docs": "Gather passport, visa, and DS-2019",
+          "complete-app": "Fill out the SS-5 application form",
+          "visit-office": "Bring documents to the Social Security office"
+        },
+        "manager_card": {
+          "0": "Hello, I'm an exchange visitor.",
+          "1": "I need to apply for a Social Security number.",
+          "2": "I have my passport, DS-2019, and job offer letter."
+        }
+      },
+      "clinic-visit": {
+        "title": "Visit a Walk-In Clinic",
+        "steps": {
+          "check-hours": "Check clinic hours and wait times",
+          "bring-id-insurance": "Bring your ID and insurance card",
+          "share-symptoms": "Tell the intake nurse about your symptoms"
+        },
+        "manager_card": {
+          "0": "Hi, I'm here for a walk-in visit.",
+          "1": "I'm a J-1 seasonal employee.",
+          "2": "Here are my ID and insurance card."
+        }
+      }
+    }
+  }
+}
