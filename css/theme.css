@@ -1,0 +1,41 @@
+:root {
+  --theme-background: #f5f7fa;
+  --theme-text: #1f2933;
+  --theme-header-text: #ffffff;
+  --theme-primary: #4f46e5;
+  --theme-primary-dark: #4338ca;
+  --theme-gradient-start: #4f46e5;
+  --theme-gradient-end: #7c3aed;
+  --theme-focus-ring: rgba(129, 140, 248, 0.45);
+  --theme-focus-ring-outline: rgba(129, 140, 248, 0.55);
+  --theme-card-title: #312e81;
+  --theme-chip-bg: rgba(255, 255, 255, 0.25);
+  --theme-chip-hover: rgba(79, 70, 229, 0.35);
+  --theme-chip-text: #eef2ff;
+  --theme-tag-bg: rgba(79, 70, 229, 0.12);
+  --theme-tag-text: #4c1d95;
+  --theme-modal-bg: #ffffff;
+}
+
+body.theme-KAL {
+  --theme-background: #f0fdfa;
+  --theme-text: #0f172a;
+  --theme-header-text: #ecfeff;
+  --theme-primary: #0f766e;
+  --theme-primary-dark: #0d9488;
+  --theme-gradient-start: #0f766e;
+  --theme-gradient-end: #14b8a6;
+  --theme-focus-ring: rgba(13, 148, 136, 0.35);
+  --theme-focus-ring-outline: rgba(15, 118, 110, 0.45);
+  --theme-card-title: #0f766e;
+  --theme-chip-bg: rgba(20, 184, 166, 0.2);
+  --theme-chip-hover: rgba(13, 148, 136, 0.35);
+  --theme-chip-text: #ecfeff;
+  --theme-tag-bg: rgba(45, 212, 191, 0.18);
+  --theme-tag-text: #0f766e;
+  --theme-modal-bg: #ffffff;
+}
+
+body.theme-DEFAULT {
+  /* Ensures we can explicitly reset to defaults if needed */
+}

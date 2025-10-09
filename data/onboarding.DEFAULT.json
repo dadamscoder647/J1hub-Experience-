@@ -1,0 +1,16 @@
+{
+  "property": "DEFAULT",
+  "title": "Orientation — Week 1",
+  "tasks": [
+    {"id": "welcome", "label": "Pick up welcome packet", "est_min": 5},
+    {"id": "hr", "label": "Complete HR I-9 + W-4", "est_min": 20},
+    {"id": "bank", "label": "Open bank account", "est_min": 30},
+    {"id": "sim", "label": "Get SIM card", "est_min": 15},
+    {"id": "bus", "label": "Get bus pass", "est_min": 10},
+    {"id": "clinic", "label": "Save clinic contacts", "est_min": 5},
+    {"id": "safety", "label": "Enable SafeWalk SOS", "est_min": 2},
+    {"id": "events", "label": "RSVP one event", "est_min": 2},
+    {"id": "locker", "label": "Add docs to locker", "est_min": 5},
+    {"id": "tour", "label": "Watch quick tour", "est_min": 3}
+  ]
+}
