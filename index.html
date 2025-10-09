@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/pwa/manifest.json">
   <meta name="theme-color" content="#007BFF">
-  <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/safety.css">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/safety.css">
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
+      navigator.serviceWorker.register('/pwa/service-worker.js', { scope: '/' });
     }
   </script>
   <title data-i18n="app.title">J1hub Experience Hub</title>
@@ -863,7 +864,7 @@
         const name = hotel.name || '';
         const slug = hotel.slug || slugify(name);
         const encodedSlug = encodeURIComponent(slug);
-        const detailPath = `hotel.html?id=${encodedSlug}`;
+        const detailPath = `/pages/hotel.html?id=${encodedSlug}`;
         const absoluteDetailUrl = new URL(detailPath, window.location.href).toString();
 
         const card = document.createElement('article');
@@ -1166,7 +1167,7 @@
     }
 
     async function loadTranslations() {
-      const data = await fetchJson('translations.json');
+      const data = await fetchJson('/assets/i18n/translations.json');
       i18n.translations = data || {};
       const storedLanguage = getStoredLanguage();
       const browserLanguage = (navigator.language || '').split('-')[0].toLowerCase();
@@ -1180,9 +1181,9 @@
     async function loadData() {
       try {
         const [hotels, housing, resources] = await Promise.all([
-          fetchJson('hotels.json'),
-          fetchJson('housing.json'),
-          fetchJson('resources.json'),
+          fetchJson('/assets/data/hotels.json'),
+          fetchJson('/assets/data/housing.json'),
+          fetchJson('/assets/data/resources.json'),
         ]);
         state.data.hotels = hotels.map((hotel) => ({
           ...hotel,
@@ -1254,10 +1255,10 @@
 
     initialize();
   </script>
-  <script type="module" src="js/onboarding.js"></script>
+  <script type="module" src="/assets/js/onboarding.js"></script>
   <div id="safety-root"></div>
   <script type="module">
-    import { initSafetyFab } from './js/safety.js';
+    import { initSafetyFab } from '/assets/js/safety.js';
     initSafetyFab();
   </script>
 </body>

@@ -1,16 +1,16 @@
 const PRESETS = {
   onboarding: {
     label: 'Onboarding',
-    path: '/',
+    path: '/index.html',
     search: { view: 'onboarding' },
   },
   events: {
     label: 'Events',
-    path: '/events.html',
+    path: '/pages/events.html',
   },
   resources: {
     label: 'Resources',
-    path: '/resources.html',
+    path: '/pages/resources.html',
   },
 };
 

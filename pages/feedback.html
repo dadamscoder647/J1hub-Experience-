@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/pwa/manifest.json">
   <meta name="theme-color" content="#007BFF">
+  <link rel="stylesheet" href="/assets/css/theme.css" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/safety.css" />
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
+      navigator.serviceWorker.register('/pwa/service-worker.js', { scope: '/' });
     }
   </script>
   <title>Hotel Feedback</title>
@@ -126,7 +129,7 @@
 
     async function populateHotels() {
       try {
-        const response = await fetch('hotels.json');
+        const response = await fetch('/assets/data/hotels.json');
         if (!response.ok) {
           throw new Error('Unable to load hotels');
         }
@@ -197,6 +200,11 @@
     });
 
     populateHotels();
+  </script>
+  <div id="safety-root"></div>
+  <script type="module">
+    import { initSafetyFab } from '/assets/js/safety.js';
+    initSafetyFab();
   </script>
 </body>
 </html>

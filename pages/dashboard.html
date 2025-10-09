@@ -3,11 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/pwa/manifest.json">
     <meta name="theme-color" content="#007BFF">
+    <link rel="stylesheet" href="/assets/css/theme.css" />
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link rel="stylesheet" href="/assets/css/safety.css" />
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js');
+        navigator.serviceWorker.register('/pwa/service-worker.js', { scope: '/' });
       }
     </script>
     <title>Admin Dashboard | J1hub Experience</title>
@@ -181,7 +184,7 @@
     ></script>
     <script>
       (function () {
-        const hotelsUrl = 'hotels.json';
+        const hotelsUrl = '/assets/data/hotels.json';
         const map = L.map('map', {
           center: [43.6275, -89.7705],
           zoom: 12,
@@ -301,7 +304,7 @@
 
         const renderPopup = (hotel, slug) => {
           const encodedSlug = encodeURIComponent(slug);
-          const linkHref = `hotel.html?id=${encodedSlug}`;
+          const linkHref = `/pages/hotel.html?id=${encodedSlug}`;
           const safeName = hotel.name || 'Hotel';
           const safeAddress = hotel.address ? `<p>${hotel.address}</p>` : '';
 
@@ -429,6 +432,11 @@
 
         init();
       })();
+    </script>
+    <div id="safety-root"></div>
+    <script type="module">
+      import { initSafetyFab } from '/assets/js/safety.js';
+      initSafetyFab();
     </script>
   </body>
 </html>

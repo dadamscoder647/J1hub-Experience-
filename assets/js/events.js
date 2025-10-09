@@ -114,7 +114,7 @@ function applyStaticTranslations() {
 
 async function fetchEvents() {
   try {
-    const response = await fetch('data/events.json', { cache: 'no-cache' });
+    const response = await fetch('/assets/data/events.json', { cache: 'no-cache' });
     if (!response.ok) {
       throw new Error(`Unable to load events (status ${response.status})`);
     }

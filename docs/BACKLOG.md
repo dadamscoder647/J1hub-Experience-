@@ -10,4 +10,4 @@
 - _TBD_
 
 ## Decisions
-- _TBD_
+- 2025-10-09: repo truss → /pages, /assets, /pwa.

@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="/pwa/manifest.json" />
   <meta name="theme-color" content="#4f46e5" />
+  <link rel="stylesheet" href="/assets/css/theme.css" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/safety.css" />
   <title>J1 Hub · Admin Dashboard</title>
   <style>
     :root {
@@ -285,7 +288,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js').catch(() => {
+        navigator.serviceWorker.register('/pwa/service-worker.js', { scope: '/' }).catch(() => {
           /* noop */
         });
       });
@@ -294,7 +297,7 @@
 </head>
 <body
   data-hit-sheet-url="https://docs.google.com/spreadsheets/d/YOUR_HITLOGGER_SHEET_ID/edit#gid=0"
-  data-checkin-readme="docs/checkin/README.md"
+  data-checkin-readme="/docs/checkin/README.md"
 >
   <header class="page-header">
     <h1>Admin Dashboard</h1>
@@ -368,7 +371,7 @@
               <button class="copy-button" type="button" data-copy-target="scan-analytics-url">Copy URL</button>
             </div>
           </label>
-          <a class="secondary-link" href="docs/analytics/README.md" target="_blank" rel="noopener">
+          <a class="secondary-link" href="/docs/analytics/README.md" target="_blank" rel="noopener">
             View analytics setup guide
           </a>
         </div>
@@ -383,11 +386,11 @@
           <a
             id="checkin-readme-link"
             class="primary-link"
-            href="docs/checkin/README.md"
+            href="/docs/checkin/README.md"
             target="_blank"
             rel="noopener"
           >Open deployment README</a>
-          <a class="secondary-link" href="apps-script/Code.gs" target="_blank" rel="noopener">
+          <a class="secondary-link" href="/apps-script/Code.gs" target="_blank" rel="noopener">
             Download Apps Script code</a
           >
         </div>
@@ -396,7 +399,12 @@
   </main>
 
   <div class="sr-only" id="dashboard-status" role="status" aria-live="polite"></div>
+  <div id="safety-root"></div>
 
-  <script type="module" src="js/admin.js"></script>
+  <script type="module" src="/assets/js/admin.js"></script>
+  <script type="module">
+    import { initSafetyFab } from '/assets/js/safety.js';
+    initSafetyFab();
+  </script>
 </body>
 </html>

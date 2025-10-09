@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/pwa/manifest.json">
   <meta name="theme-color" content="#007BFF">
-  <link rel="stylesheet" href="css/safety.css">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/safety.css">
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
+      navigator.serviceWorker.register('/pwa/service-worker.js', { scope: '/' });
     }
   </script>
   <title>Hotel Details | J1hub Experience</title>
@@ -164,7 +166,7 @@
 </head>
 <body>
   <main class="container">
-    <a class="back-link" href="index.html" aria-label="Return to hotel listings">&larr; Back to listings</a>
+    <a class="back-link" href="/index.html" aria-label="Return to hotel listings">&larr; Back to listings</a>
     <section id="message" class="message" role="status" aria-live="polite" hidden></section>
     <article id="hotel-detail" class="hotel-detail" hidden>
       <div class="hotel-header">
@@ -183,6 +185,7 @@
       <div id="hotel-actions" class="hotel-actions"></div>
     </article>
   </main>
+  <div id="safety-root"></div>
   <script>
     const slugify = (value = '') =>
       value
@@ -219,7 +222,7 @@
       showMessage('Hotel not found. Please return to the listings.');
       if (messageEl) {
         const backLink = document.createElement('a');
-        backLink.href = 'index.html';
+        backLink.href = '/index.html';
         backLink.textContent = 'Back to listings';
         backLink.className = 'inline-link';
         backLink.setAttribute('aria-label', 'Go back to hotel listings');
@@ -345,13 +348,13 @@
         );
       }
 
-      const qrTarget = new URL(`hotel.html?id=${encodeURIComponent(slug)}`, window.location.href).toString();
+      const qrTarget = new URL(`/pages/hotel.html?id=${encodeURIComponent(slug)}`, window.location.origin).toString();
       qrImage.src = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeForURL(qrTarget)}`;
       qrImage.alt = `QR code linking to details for ${hotel.name}`;
     };
 
     const fetchHotels = async () => {
-      const response = await fetch('hotels.json');
+      const response = await fetch('/assets/data/hotels.json');
       if (!response.ok) {
         throw new Error('Unable to load hotels list.');
       }
@@ -389,7 +392,7 @@
   </script>
   <div id="safety-root"></div>
   <script type="module">
-    import { initSafetyFab } from './js/safety.js';
+    import { initSafetyFab } from '/assets/js/safety.js';
     initSafetyFab();
   </script>
 </body>

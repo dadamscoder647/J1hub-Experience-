@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/pwa/manifest.json">
   <meta name="theme-color" content="#007BFF">
+  <link rel="stylesheet" href="/assets/css/theme.css" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/safety.css" />
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
+      navigator.serviceWorker.register('/pwa/service-worker.js', { scope: '/' });
     }
   </script>
   <title>J1hub – QR Sheet Generator</title>
@@ -230,8 +233,8 @@
   <main>
     <header>
       <div class="nav-links">
-        <a href="admin.html">&larr; Back to Admin</a>
-        <a href="index.html">&larr; Back to Home</a>
+        <a href="/pages/admin.html">&larr; Back to Admin</a>
+        <a href="/index.html">&larr; Back to Home</a>
       </div>
       <h1>J1hub – QR Sheet Generator</h1>
       <p>Customize the layout and generate printable QR sheets for all hotels.</p>
@@ -266,7 +269,7 @@
 
       <div class="checkbox-group">
         <input type="checkbox" id="useDetailLink" name="useDetailLink" checked />
-        <label for="useDetailLink">Use per-hotel detail link (hotel.html?id=&lt;slug&gt;)</label>
+        <label for="useDetailLink">Use per-hotel detail link (/pages/hotel.html?id=&lt;slug&gt;)</label>
       </div>
 
       <button class="generate-btn" id="generatePdf" type="button" aria-label="Generate PDF of QR codes">Generate PDF</button>
@@ -277,7 +280,8 @@
     </section>
   </main>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-MWXf1oCF8gkp8oPZxC25f6/sOlne342XQI3/OQCM0svBLmvBxG29+rsoAhH2m6q+UpBAkLTUE3S1CyeZkNljEg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <div id="safety-root"></div>
+  <script src="/assets/js/vendor/qr.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-CVvazsSUub0DJ1brNJpFxgwSNqD0O6eIO0t67F1TBQJqBT9nOfHxVXkciC0G/9SZ5pGdlZkO7pRbGkO64V0JpQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNa5kE2noKGItgKeGaH1ikIze8ih/7gToYtL6vhfVqlhK/SXGEdqzVLO6S8Vyo1CEpOtdr0IW7sSLf0Q71R8aQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
@@ -317,8 +321,9 @@
 
     function truncateAddress(address) {
       if (!address) return '';
-      const firstLine = address.split(/?
-/)[0] || '';
+        const basePath = `${window.location.origin}/`;
+        return `${basePath}pages/hotel.html?id=${encodeForURL(slug)}`;
+      const fallbackBase = `${window.location.origin}/`;
       return firstLine.length > 40 ? `${firstLine.slice(0, 37)}…` : firstLine;
     }
 
@@ -443,7 +448,11 @@
 
       gridPreview.style.width = originalWidth;
 
-      const { jsPDF } = window.jspdf;
+        const response = await fetch('/assets/data/hotels.json', { cache: 'no-cache' });
+  <script type="module">
+    import { initSafetyFab } from '/assets/js/safety.js';
+    initSafetyFab();
+  </script>
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: [pageWidthPt, pageHeightPt] });
 
       const chunks = chunkCanvas(canvas, pageWidthPt, pageHeightPt, marginPt);
