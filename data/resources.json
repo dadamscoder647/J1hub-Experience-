@@ -1,0 +1,50 @@
+[
+  {
+    "id": "bank-account",
+    "title": "Open a Bank Account",
+    "est_min": 30,
+    "steps": [
+      { "id": "pick-bank", "label": "Pick a nearby bank from the map" },
+      { "id": "bring-id", "label": "Bring passport + I-94 + job offer" },
+      { "id": "deposit", "label": "Bring initial deposit (if required)" }
+    ],
+    "map_link": "https://maps.google.com/?q=bank",
+    "manager_card": [
+      "Hi, I'm a seasonal worker.",
+      "I'd like to open a basic checking account.",
+      "I have my passport and I-94."
+    ]
+  },
+  {
+    "id": "ssn-appointment",
+    "title": "Apply for a Social Security Number",
+    "est_min": 45,
+    "steps": [
+      { "id": "collect-docs", "label": "Gather passport, visa, and DS-2019" },
+      { "id": "complete-app", "label": "Fill out the SS-5 application form" },
+      { "id": "visit-office", "label": "Bring documents to the Social Security office" }
+    ],
+    "map_link": "https://maps.google.com/?q=social+security+office",
+    "manager_card": [
+      "Hello, I'm an exchange visitor.",
+      "I need to apply for a Social Security number.",
+      "I have my passport, DS-2019, and job offer letter."
+    ]
+  },
+  {
+    "id": "clinic-visit",
+    "title": "Visit a Walk-In Clinic",
+    "est_min": 20,
+    "steps": [
+      { "id": "check-hours", "label": "Check clinic hours and wait times" },
+      { "id": "bring-id-insurance", "label": "Bring your ID and insurance card" },
+      { "id": "share-symptoms", "label": "Tell the intake nurse about your symptoms" }
+    ],
+    "map_link": "https://maps.google.com/?q=clinic",
+    "manager_card": [
+      "Hi, I'm here for a walk-in visit.",
+      "I'm a J-1 seasonal employee.",
+      "Here are my ID and insurance card."
+    ]
+  }
+]

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guided Playbooks</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: var(--theme-background, #f7f8fb);
+        color: var(--theme-text, #0f172a);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        background: linear-gradient(135deg, var(--theme-gradient-start, #4338ca), var(--theme-gradient-end, #06b6d4));
+        color: var(--theme-header-text, #fff);
+        padding: 2.5rem 1.5rem 2rem;
+        text-align: center;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 4vw, 2.4rem);
+      }
+
+      header p {
+        max-width: 640px;
+        margin: 0.75rem auto 0;
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+        opacity: 0.95;
+      }
+
+      header a.back-link {
+        position: absolute;
+        left: 1.5rem;
+        top: 1.25rem;
+        color: inherit;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      main {
+        flex: 1;
+        padding: 2rem 1.5rem 3rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+        gap: 2rem;
+        width: min(1200px, 100%);
+      }
+
+      .resource-list {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        border-radius: 18px;
+        padding: 1rem;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .resource-item {
+        width: 100%;
+        border: none;
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+        text-align: left;
+        background: #f8fafc;
+        color: inherit;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .resource-item:is(:hover, :focus-visible) {
+        outline: none;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+        background: #eef2ff;
+      }
+
+      .resource-item[aria-current="true"] {
+        background: var(--theme-primary-dark, #4338ca);
+        color: #fff;
+        box-shadow: 0 12px 30px rgba(67, 56, 202, 0.45);
+      }
+
+      .resource-item-title {
+        font-weight: 700;
+        font-size: 1.05rem;
+      }
+
+      .resource-item-estimate {
+        font-size: 0.95rem;
+        opacity: 0.85;
+      }
+
+      .resource-detail {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(16px);
+        border-radius: 20px;
+        padding: 1.75rem;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.15);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .resource-detail header {
+        position: static;
+        padding: 0;
+        background: none;
+        color: inherit;
+        box-shadow: none;
+        text-align: left;
+      }
+
+      .detail-title {
+        font-size: clamp(1.6rem, 3vw, 2.1rem);
+        margin-bottom: 0.3rem;
+      }
+
+      .detail-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      .detail-estimate {
+        font-weight: 600;
+        color: var(--theme-primary-dark, #4338ca);
+      }
+
+      .detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-left: auto;
+      }
+
+      .primary-button,
+      .ghost-button {
+        border-radius: 999px;
+        font-weight: 600;
+        padding: 0.55rem 1.2rem;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      .primary-button {
+        background: var(--theme-primary-dark, #4338ca);
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(67, 56, 202, 0.35);
+      }
+
+      .ghost-button {
+        background: rgba(15, 23, 42, 0.08);
+        color: inherit;
+        border: 1px solid rgba(15, 23, 42, 0.15);
+      }
+
+      .primary-button:is(:hover, :focus-visible),
+      .ghost-button:is(:hover, :focus-visible) {
+        outline: none;
+        transform: translateY(-1px);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2);
+      }
+
+      .ghost-button:is(:hover, :focus-visible) {
+        background: rgba(15, 23, 42, 0.12);
+      }
+
+      .step-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+
+      .step-item {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.75rem;
+        align-items: start;
+        padding: 0.9rem 1rem;
+        border-radius: 14px;
+        background: rgba(148, 163, 184, 0.12);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+      }
+
+      .step-checkbox {
+        width: 1.35rem;
+        height: 1.35rem;
+        margin-top: 0.2rem;
+        border-radius: 6px;
+        border: 2px solid rgba(67, 56, 202, 0.6);
+        cursor: pointer;
+      }
+
+      .step-checkbox:focus-visible {
+        outline: 3px solid rgba(14, 165, 233, 0.45);
+        outline-offset: 2px;
+      }
+
+      .manager-card {
+        border-radius: 20px;
+        padding: 1.8rem 1.5rem;
+        background: #0f172a;
+        color: #f8fafc;
+        display: none;
+        gap: 1.5rem;
+      }
+
+      .manager-card.is-visible {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .manager-card-lead {
+        font-size: clamp(1.15rem, 3vw, 1.4rem);
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
+
+      .manager-card-line {
+        font-size: clamp(2.2rem, 5vw, 3rem);
+        line-height: 1.2;
+        font-weight: 700;
+        text-align: center;
+        padding: 0.35rem 0.5rem;
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.75);
+        border: 2px solid rgba(248, 250, 252, 0.55);
+      }
+
+      .empty-detail {
+        margin: 0 auto;
+        max-width: 420px;
+        text-align: center;
+        font-size: 1.1rem;
+        opacity: 0.75;
+      }
+
+      @media (max-width: 960px) {
+        main {
+          padding-inline: 1rem;
+        }
+
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .resource-item {
+          padding: 0.9rem 1rem;
+        }
+
+        .resource-detail {
+          padding: 1.35rem;
+        }
+
+        .detail-actions {
+          width: 100%;
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="back-link" href="index.html">← Hub</a>
+      <h1 id="pageTitle">Guided Playbooks</h1>
+      <p id="pageDescription">
+        Follow step-by-step checklists for common tasks and keep your progress.
+      </p>
+    </header>
+    <main>
+      <section class="layout">
+        <aside class="resource-list" id="resourceList" aria-label="Playbooks"></aside>
+        <section class="resource-detail" aria-live="polite">
+          <div id="emptyDetail" class="empty-detail">
+            Select a playbook to see the checklist and manager card.
+          </div>
+          <header id="detailHeader" hidden>
+            <h2 class="detail-title" id="detailTitle"></h2>
+            <div class="detail-meta">
+              <span class="detail-estimate" id="detailEstimate"></span>
+              <div class="detail-actions">
+                <a
+                  id="mapLink"
+                  class="ghost-button"
+                  href="#"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  Open map
+                </a>
+                <button
+                  class="primary-button"
+                  type="button"
+                  id="managerToggle"
+                  aria-controls="managerCard"
+                >
+                  Show to Manager
+                </button>
+              </div>
+            </div>
+          </header>
+          <ol class="step-list" id="stepList" hidden></ol>
+          <section class="manager-card" id="managerCard" hidden>
+            <p class="manager-card-lead" id="managerLead"></p>
+            <div id="managerLines" aria-live="polite"></div>
+          </section>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="js/resources.js"></script>
+  </body>
+</html>

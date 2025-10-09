@@ -1,12 +1,14 @@
 // J1hub PWA – offline support with fallback page
-const VERSION = "j1hub-v3";
+const VERSION = "j1hub-v4";
 const BASE = self.location.pathname.replace(/\/[^/]*$/, "/");
 const ASSETS = [
   `${BASE}`, `${BASE}index.html`, `${BASE}hotel.html`, `${BASE}map.html`,
-  `${BASE}qr.html`, `${BASE}qr-sheet.html`, `${BASE}admin.html`,
+  `${BASE}resources.html`, `${BASE}qr.html`, `${BASE}qr-sheet.html`, `${BASE}admin.html`,
   `${BASE}import-hotels.html`, `${BASE}dashboard.html`, `${BASE}feedback.html`,
   `${BASE}offline.html`,
   `${BASE}hotels.json`, `${BASE}resources.json`, `${BASE}housing.json`, `${BASE}translations.json`,
+  `${BASE}data/resources.json`, `${BASE}js/resources.js`,
+  `${BASE}translations/en.json`, `${BASE}translations/es.json`, `${BASE}translations/pt.json`,
   `${BASE}manifest.json`, `${BASE}j1hub-192.png`, `${BASE}j1hub-512.png`
 ];
 

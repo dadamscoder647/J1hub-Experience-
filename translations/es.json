@@ -1,0 +1,56 @@
+{
+  "resources": {
+    "pageTitle": "Guías paso a paso",
+    "pageDescription": "Apoyo paso a paso para trabajadores temporales J-1.",
+    "playbookListLabel": "Guías",
+    "actions": {
+      "showManager": "Mostrar al gerente",
+      "hideManager": "Ocultar tarjeta para gerente",
+      "viewMap": "Abrir mapa"
+    },
+    "managerLead": "Muestra esta pantalla a tu gerente.",
+    "emptyState": "Selecciona una guía para ver la lista y la tarjeta para gerente.",
+    "estimate": "≈ {minutes} min",
+    "playbooks": {
+      "bank-account": {
+        "title": "Abrir una cuenta bancaria",
+        "steps": {
+          "pick-bank": "Elige un banco cercano en el mapa",
+          "bring-id": "Lleva pasaporte + I-94 + oferta de trabajo",
+          "deposit": "Lleva un depósito inicial (si lo piden)"
+        },
+        "manager_card": {
+          "0": "Hola, soy un trabajador temporal.",
+          "1": "Quisiera abrir una cuenta corriente básica.",
+          "2": "Tengo mi pasaporte y el formulario I-94."
+        }
+      },
+      "ssn-appointment": {
+        "title": "Solicitar un número de Seguro Social",
+        "steps": {
+          "collect-docs": "Reúne pasaporte, visa y DS-2019",
+          "complete-app": "Completa el formulario SS-5",
+          "visit-office": "Lleva los documentos a la oficina del Seguro Social"
+        },
+        "manager_card": {
+          "0": "Hola, soy un visitante de intercambio.",
+          "1": "Necesito solicitar un número de Seguro Social.",
+          "2": "Tengo mi pasaporte, DS-2019 y carta de oferta laboral."
+        }
+      },
+      "clinic-visit": {
+        "title": "Visitar una clínica sin cita",
+        "steps": {
+          "check-hours": "Revisa el horario y el tiempo de espera de la clínica",
+          "bring-id-insurance": "Lleva tu identificación y tarjeta de seguro",
+          "share-symptoms": "Explica tus síntomas a la enfermera de admisión"
+        },
+        "manager_card": {
+          "0": "Hola, vine para una visita sin cita.",
+          "1": "Soy un empleado de temporada con visa J-1.",
+          "2": "Aquí están mi identificación y tarjeta de seguro."
+        }
+      }
+    }
+  }
+}

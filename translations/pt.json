@@ -1,0 +1,56 @@
+{
+  "resources": {
+    "pageTitle": "Guias orientados",
+    "pageDescription": "Passo a passo para trabalhadores sazonais J-1.",
+    "playbookListLabel": "Guias",
+    "actions": {
+      "showManager": "Mostrar ao gerente",
+      "hideManager": "Ocultar cartão do gerente",
+      "viewMap": "Abrir mapa"
+    },
+    "managerLead": "Mostre esta tela ao seu gerente.",
+    "emptyState": "Selecione um guia para ver a lista e o cartão do gerente.",
+    "estimate": "≈ {minutes} min",
+    "playbooks": {
+      "bank-account": {
+        "title": "Abrir uma conta bancária",
+        "steps": {
+          "pick-bank": "Escolha um banco próximo no mapa",
+          "bring-id": "Leve passaporte + I-94 + carta de trabalho",
+          "deposit": "Leve um depósito inicial (se necessário)"
+        },
+        "manager_card": {
+          "0": "Olá, sou um trabalhador sazonal.",
+          "1": "Gostaria de abrir uma conta corrente básica.",
+          "2": "Tenho meu passaporte e o I-94."
+        }
+      },
+      "ssn-appointment": {
+        "title": "Solicitar um número do Social Security",
+        "steps": {
+          "collect-docs": "Separe passaporte, visto e DS-2019",
+          "complete-app": "Preencha o formulário SS-5",
+          "visit-office": "Leve os documentos ao escritório do Social Security"
+        },
+        "manager_card": {
+          "0": "Olá, sou um participante de intercâmbio.",
+          "1": "Preciso solicitar um número do Social Security.",
+          "2": "Estou com meu passaporte, DS-2019 e carta de oferta."
+        }
+      },
+      "clinic-visit": {
+        "title": "Visitar uma clínica sem horário marcado",
+        "steps": {
+          "check-hours": "Verifique o horário e a fila da clínica",
+          "bring-id-insurance": "Leve sua identidade e cartão do seguro",
+          "share-symptoms": "Conte seus sintomas para a enfermeira de triagem"
+        },
+        "manager_card": {
+          "0": "Olá, estou aqui para um atendimento sem horário.",
+          "1": "Sou um funcionário sazonal com visto J-1.",
+          "2": "Aqui estão minha identidade e cartão do seguro."
+        }
+      }
+    }
+  }
+}
