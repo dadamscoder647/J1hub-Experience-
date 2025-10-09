@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Allow shared front-end libraries
+!js/
+!js/lib/
+!js/lib/i18n.js
