@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>J1Hub Smoke Checks</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        margin: 1.5rem;
+        line-height: 1.5;
+        background: #0b1120;
+        color: #e2e8f0;
+      }
+
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 0.25rem;
+      }
+
+      p {
+        margin-top: 0;
+        max-width: 60ch;
+      }
+
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 0.6rem 1.4rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #22d3ee;
+        color: #0b1120;
+        box-shadow: 0 10px 24px rgba(14, 165, 233, 0.35);
+      }
+
+      button:disabled {
+        cursor: progress;
+        opacity: 0.65;
+      }
+
+      .layout {
+        display: grid;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+      }
+
+      .log {
+        background: rgba(15, 23, 42, 0.75);
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+        white-space: pre-wrap;
+        max-height: 360px;
+        overflow-y: auto;
+      }
+
+      .log-line {
+        margin: 0;
+      }
+
+      .log-line + .log-line {
+        margin-top: 0.4rem;
+      }
+
+      .pass {
+        color: #4ade80;
+      }
+
+      .fail {
+        color: #f87171;
+      }
+
+      iframe {
+        width: min(100%, 960px);
+        height: 540px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: #0f172a;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>J1Hub Smoke Checks</h1>
+    <p>
+      Click <strong>Run smoke tests</strong> to load core flows in an iframe and assert that
+      essential UI hooks are present. This file can be opened directly in a browser or
+      executed through Playwright.
+    </p>
+    <button type="button" id="runButton">Run smoke tests</button>
+    <div class="layout">
+      <section aria-label="Test log" class="log" id="log">Ready. Click “Run smoke tests”.</section>
+      <iframe
+        id="smokeFrame"
+        title="J1Hub smoke frame"
+        src="about:blank"
+        loading="lazy"
+        sandbox="allow-same-origin allow-scripts allow-forms"
+      ></iframe>
+    </div>
+    <script>
+      const runButton = document.getElementById('runButton');
+      const logEl = document.getElementById('log');
+      const frame = document.getElementById('smokeFrame');
+
+      const scenarios = [
+        {
+          name: 'Home — Kalispell (es)',
+          url: '../index.html?prop=KAL&lang=es',
+          delayMs: 1500,
+          checks: [
+            {
+              description: 'Resume Orientation button renders',
+              test: (doc) => Boolean(doc.getElementById('resume-orientation')),
+            },
+            {
+              description: 'Onboarding modal shell exists',
+              test: (doc) => Boolean(doc.querySelector('.onboarding-modal')),
+            },
+            {
+              description: 'Safety FAB is injected',
+              test: (doc) => Boolean(doc.querySelector('.safety-fab-button')),
+            },
+            {
+              description: 'Resources tab selector present',
+              test: (doc) => Boolean(doc.querySelector('[data-tab="resources"]')),
+            },
+          ],
+        },
+        {
+          name: 'Events',
+          url: '../events.html',
+          delayMs: 1500,
+          checks: [
+            {
+              description: 'Events summary region ready',
+              test: (doc) => Boolean(doc.getElementById('eventsSummary')),
+            },
+            {
+              description: 'Events grid container renders',
+              test: (doc) => Boolean(doc.querySelector('.events-grid')),
+            },
+            {
+              description: 'QR modal markup available',
+              test: (doc) => Boolean(doc.getElementById('qrModal')),
+            },
+          ],
+        },
+        {
+          name: 'Resources',
+          url: '../resources.html',
+          delayMs: 1500,
+          checks: [
+            {
+              description: 'Resource list sidebar present',
+              test: (doc) => Boolean(doc.getElementById('resourceList')),
+            },
+            {
+              description: 'Manager toggle button available',
+              test: (doc) => Boolean(doc.getElementById('managerToggle')),
+            },
+            {
+              description: 'Step list container available',
+              test: (doc) => Boolean(doc.getElementById('stepList')),
+            },
+          ],
+        },
+      ];
+
+      function appendLog(message, status) {
+        const line = document.createElement('p');
+        line.className = `log-line${status ? ` ${status}` : ''}`;
+        line.textContent = message;
+        logEl.appendChild(line);
+        logEl.scrollTop = logEl.scrollHeight;
+        console.log(message);
+      }
+
+      function resetLog() {
+        logEl.textContent = '';
+      }
+
+      function loadDocument(url, delayMs) {
+        return new Promise((resolve, reject) => {
+          function cleanup() {
+            frame.removeEventListener('load', handleLoad);
+            frame.removeEventListener('error', handleError);
+          }
+
+          function handleLoad() {
+            setTimeout(() => {
+              try {
+                const doc = frame.contentDocument;
+                if (!doc) {
+                  throw new Error('Unable to access frame document');
+                }
+                cleanup();
+                resolve(doc);
+              } catch (error) {
+                cleanup();
+                reject(error);
+              }
+            }, delayMs);
+          }
+
+          function handleError(event) {
+            cleanup();
+            reject(event?.error || new Error(`Failed to load ${url}`));
+          }
+
+          frame.addEventListener('load', handleLoad, { once: true });
+          frame.addEventListener('error', handleError, { once: true });
+          frame.src = url;
+        });
+      }
+
+      async function runScenario(scenario) {
+        appendLog(`→ ${scenario.name}`, null);
+        try {
+          const doc = await loadDocument(scenario.url, scenario.delayMs);
+          let allPassed = true;
+          scenario.checks.forEach((check) => {
+            let passed = false;
+            try {
+              passed = Boolean(check.test(doc));
+            } catch (error) {
+              passed = false;
+            }
+            if (passed) {
+              appendLog(`   ✅ ${check.description}`, 'pass');
+            } else {
+              allPassed = false;
+              appendLog(`   ❌ ${check.description}`, 'fail');
+            }
+          });
+          appendLog(allPassed ? '   ✔ Scenario passed' : '   ⚠ Scenario has failures', allPassed ? 'pass' : 'fail');
+          return allPassed;
+        } catch (error) {
+          appendLog(`   ❌ Unable to load scenario: ${error.message}`, 'fail');
+          return false;
+        }
+      }
+
+      async function runSmokeTests() {
+        runButton.disabled = true;
+        resetLog();
+        appendLog('Starting smoke checks…', null);
+        let overallPass = true;
+        for (const scenario of scenarios) {
+          // eslint-disable-next-line no-await-in-loop
+          const passed = await runScenario(scenario);
+          overallPass = overallPass && passed;
+        }
+        appendLog(overallPass ? 'All smoke checks passed.' : 'Smoke checks completed with failures.', overallPass ? 'pass' : 'fail');
+        runButton.disabled = false;
+      }
+
+      runButton.addEventListener('click', () => {
+        runSmokeTests();
+      });
+    </script>
+  </body>
+</html>
