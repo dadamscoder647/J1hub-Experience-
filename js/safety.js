@@ -1,6 +1,20 @@
+import { t } from './lib/i18n.js';
+
 const CONTACTS_KEY = 'j1hub_safety_contacts';
 const SESSION_KEY = 'j1hub_safety_session';
 const TAP_WINDOW_MS = 1200;
+
+const FALLBACK_TEXT = {
+  'safety.fab': 'Safety',
+  'safety.safeWalk': 'SafeWalk',
+  'safety.sos': 'SOS',
+  'safety.minutes': '{minutes} min',
+  'safety.start': 'Start SafeWalk',
+  'safety.stop': 'Stop SafeWalk',
+  'safety.contacts': 'Manage contacts',
+  'safety.sendSOS': 'Send SOS',
+  'safety.needHelp': 'Need help. Last known map: {mapUrl}'
+};
 
 let rootElement = null;
 let fabButton = null;
@@ -21,6 +35,55 @@ let tapHistory = [];
 let openModalElement = null;
 let lastFocusedElement = null;
 const registeredSelects = new Set();
+
+function formatTemplate(template, replacements = {}) {
+  if (typeof template !== 'string') {
+    return template;
+  }
+  return template.replace(/\{(\w+)\}/g, (_, token) => {
+    return Object.prototype.hasOwnProperty.call(replacements, token)
+      ? replacements[token]
+      : `{${token}}`;
+  });
+}
+
+async function translateValue(key, replacements = {}) {
+  try {
+    const translated = await t(key, replacements);
+    if (translated && translated !== key) {
+      return translated;
+    }
+  } catch (error) {
+    console.warn(`safety: unable to translate ${key}`, error);
+  }
+
+  const fallback = FALLBACK_TEXT[key];
+  if (fallback !== undefined) {
+    return formatTemplate(fallback, replacements);
+  }
+
+  return formatTemplate(key, replacements);
+}
+
+function setTextWithTranslation(element, key, replacements = {}) {
+  if (!element) {
+    return Promise.resolve('');
+  }
+  element.dataset.i18nKey = key;
+  const fallback = FALLBACK_TEXT[key];
+  const fallbackValue = fallback !== undefined ? formatTemplate(fallback, replacements) : formatTemplate(key, replacements);
+  element.textContent = fallbackValue;
+
+  return translateValue(key, replacements)
+    .then((value) => {
+      element.textContent = value;
+      return value;
+    })
+    .catch((error) => {
+      console.warn(`safety: failed to apply translation for ${key}`, error);
+      return fallbackValue;
+    });
+}
 
 function loadContacts() {
   try {
@@ -79,13 +142,14 @@ function formatTimeLeft(milliseconds) {
   return `${minutes}:${seconds}`;
 }
 
-function composeMessage(location) {
+async function composeMessage(location) {
+  let mapUrl = 'https://maps.google.com/';
   if (location && typeof location.lat === 'number' && typeof location.lng === 'number') {
     const roundedLat = location.lat.toFixed(5);
     const roundedLng = location.lng.toFixed(5);
-    return `Need help. Last known map: https://maps.google.com/?q=${roundedLat},${roundedLng}`;
+    mapUrl = `https://maps.google.com/?q=${roundedLat},${roundedLng}`;
   }
-  return 'Need help. Last known map: https://maps.google.com/';
+  return translateValue('safety.needHelp', { mapUrl });
 }
 
 function tryGetLocation() {
@@ -221,7 +285,7 @@ function startCountdown(session) {
   countdownInterval = setInterval(updateCountdown, 1000);
 }
 
-function createModal(id, titleText) {
+function createModal(id, titleConfig) {
   const overlay = document.createElement('div');
   overlay.className = 'safety-overlay';
   overlay.dataset.modalId = id;
@@ -243,7 +307,19 @@ function createModal(id, titleText) {
   const header = document.createElement('header');
   const title = document.createElement('h2');
   title.id = `${id}-title`;
-  title.textContent = titleText;
+  if (titleConfig && typeof titleConfig === 'object') {
+    const { key, fallback } = titleConfig;
+    if (fallback) {
+      title.textContent = fallback;
+    }
+    if (key) {
+      setTextWithTranslation(title, key);
+    }
+  } else if (typeof titleConfig === 'string') {
+    title.textContent = titleConfig;
+  } else {
+    title.textContent = '';
+  }
   header.appendChild(title);
 
   modal.append(close, header);
@@ -502,7 +578,7 @@ function buildContactsModal() {
 }
 
 function buildSafeWalkModal() {
-  const { overlay, modal } = createModal('safety-safewalk', 'Start SafeWalk');
+  const { overlay, modal } = createModal('safety-safewalk', { key: 'safety.start' });
 
   const intro = document.createElement('p');
   intro.textContent = 'Choose a timer and contact. We will remind you before silently opening your message if you do not check in.';
@@ -532,7 +608,7 @@ function buildSafeWalkModal() {
       input.checked = true;
     }
     const span = document.createElement('span');
-    span.textContent = `${minutes} min`;
+    setTextWithTranslation(span, 'safety.minutes', { minutes });
     label.append(input, span);
     durationOptions.appendChild(label);
   });
@@ -556,7 +632,7 @@ function buildSafeWalkModal() {
   const manageButton = document.createElement('button');
   manageButton.type = 'button';
   manageButton.className = 'safety-secondary';
-  manageButton.textContent = 'Manage contacts';
+  setTextWithTranslation(manageButton, 'safety.contacts');
   manageButton.addEventListener('click', () => {
     closeModal(overlay);
     contactsModal.open();
@@ -566,7 +642,7 @@ function buildSafeWalkModal() {
   const startButton = document.createElement('button');
   startButton.type = 'button';
   startButton.className = 'safety-primary';
-  startButton.textContent = 'Start SafeWalk';
+  setTextWithTranslation(startButton, 'safety.start');
   modal.appendChild(startButton);
 
   function updateStartState() {
@@ -591,7 +667,7 @@ function buildSafeWalkModal() {
     );
     closeModal(overlay);
     const location = await tryGetLocation();
-    const message = composeMessage(location);
+    const message = await composeMessage(location);
     const startedAt = Date.now();
     const session = {
       contactName: selectedContact.name,
@@ -647,7 +723,7 @@ function buildSosModal() {
   const sendButton = document.createElement('button');
   sendButton.type = 'button';
   sendButton.className = 'safety-primary';
-  sendButton.textContent = 'Send silent SOS';
+  setTextWithTranslation(sendButton, 'safety.sendSOS');
 
   function updateSendState() {
     sendButton.disabled = !contactSelect.value;
@@ -666,14 +742,14 @@ function buildSosModal() {
     }
     closeModal(overlay);
     const location = await tryGetLocation();
-    const message = composeMessage(location);
+    const message = await composeMessage(location);
     openDistressMessage(contact, message);
   });
 
   const manageButton = document.createElement('button');
   manageButton.type = 'button';
   manageButton.className = 'safety-secondary';
-  manageButton.textContent = 'Manage contacts';
+  setTextWithTranslation(manageButton, 'safety.contacts');
   manageButton.addEventListener('click', () => {
     closeModal(overlay);
     contactsModal.open();
@@ -753,7 +829,7 @@ function buildCountdown() {
 
   const cancelButton = document.createElement('button');
   cancelButton.type = 'button';
-  cancelButton.textContent = 'Cancel';
+  setTextWithTranslation(cancelButton, 'safety.stop');
   cancelButton.addEventListener('click', () => stopCountdown(true));
 
   container.append(heading, contactInfo, timeElement, cancelButton);
@@ -778,8 +854,19 @@ function buildMenu() {
 
   const safeWalkButton = document.createElement('button');
   safeWalkButton.type = 'button';
-  safeWalkButton.setAttribute('aria-label', 'Start SafeWalk timer');
-  safeWalkButton.innerHTML = '<span>SafeWalk</span><span class="safety-menu-icon">⏱️</span>';
+  translateValue('safety.start')
+    .then((value) => {
+      safeWalkButton.setAttribute('aria-label', value);
+    })
+    .catch(() => {
+      safeWalkButton.setAttribute('aria-label', FALLBACK_TEXT['safety.start']);
+    });
+  const safeWalkLabel = document.createElement('span');
+  setTextWithTranslation(safeWalkLabel, 'safety.safeWalk');
+  const safeWalkIcon = document.createElement('span');
+  safeWalkIcon.className = 'safety-menu-icon';
+  safeWalkIcon.textContent = '⏱️';
+  safeWalkButton.append(safeWalkLabel, safeWalkIcon);
   safeWalkButton.addEventListener('click', () => {
     toggleMenu(false);
     safeWalkModal.refresh();
@@ -788,8 +875,19 @@ function buildMenu() {
 
   const sosButton = document.createElement('button');
   sosButton.type = 'button';
-  sosButton.setAttribute('aria-label', 'Send silent SOS');
-  sosButton.innerHTML = '<span>SOS</span><span class="safety-menu-icon">🆘</span>';
+  translateValue('safety.sendSOS')
+    .then((value) => {
+      sosButton.setAttribute('aria-label', value);
+    })
+    .catch(() => {
+      sosButton.setAttribute('aria-label', FALLBACK_TEXT['safety.sendSOS']);
+    });
+  const sosLabel = document.createElement('span');
+  setTextWithTranslation(sosLabel, 'safety.sos');
+  const sosIconSpan = document.createElement('span');
+  sosIconSpan.className = 'safety-menu-icon';
+  sosIconSpan.textContent = '🆘';
+  sosButton.append(sosLabel, sosIconSpan);
   sosButton.addEventListener('click', () => {
     toggleMenu(false);
     sosModal.refresh();
@@ -815,7 +913,7 @@ function buildFabButton() {
   const label = document.createElement('span');
   label.className = 'safety-fab-label';
   const labelStrong = document.createElement('strong');
-  labelStrong.textContent = 'Safety';
+  setTextWithTranslation(labelStrong, 'safety.fab');
   const labelSmall = document.createElement('span');
   labelSmall.textContent = 'Hold space for you';
   label.append(labelStrong, labelSmall);
@@ -881,7 +979,13 @@ export function initSafetyFab() {
   });
 
   if (countdownCancelButton) {
-    countdownCancelButton.setAttribute('aria-label', 'Cancel active SafeWalk');
+    translateValue('safety.stop')
+      .then((value) => {
+        countdownCancelButton.setAttribute('aria-label', value);
+      })
+      .catch(() => {
+        countdownCancelButton.setAttribute('aria-label', FALLBACK_TEXT['safety.stop']);
+      });
   }
 
   const storedSession = loadSession();
